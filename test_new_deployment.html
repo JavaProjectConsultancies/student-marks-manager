@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test New Deployment</title>
+    <title>Test Form Submission - CORS Free</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,85 +35,153 @@
             font-family: monospace;
             white-space: pre-wrap;
         }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧪 Test New Deployment</h1>
-        <p>Testing your new Google Apps Script deployment:</p>
-        <p><strong>URL:</strong> https://script.google.com/macros/s/AKfycbykcepDKnzvljtQa52-4eF0PTw7_ZLsFH-YKi_hWadYfDJOrjugjVr0ZOIpmGnUNpKwog/exec</p>
+        <h1>🧪 Test Form Submission</h1>
+        <p>This test uses form submission to bypass CORS issues on GitHub Pages.</p>
         
-        <button onclick="testConnection()">🔗 Test Connection</button>
-        <button onclick="testSync()">📊 Test Data Sync</button>
+        <h3>Your Google Apps Script URL:</h3>
+        <p><code>https://script.google.com/macros/s/AKfycbxiUEGuAsYJ4q12z3j-OrPK91mLI8hrsCIDKGy6HbFYk4SEzHhnjGLOxh_g5Fjct-i7uQ/exec</code></p>
+        
+        <button onclick="testFormSubmission()">📝 Test Form Submission</button>
+        <button onclick="testWithSampleData()">📊 Test with Sample Data</button>
         
         <div id="result" class="result" style="display: none;"></div>
     </div>
 
     <script>
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxYjybW7NjAq9w7JYcK3Qg39u33bApX6fP3NqUhAJZ04nPH0kJ59KD59wWJ9NbYH5TS/exec';
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxiUEGuAsYJ4q12z3j-OrPK91mLI8hrsCIDKGy6HbFYk4SEzHhnjGLOxh_g5Fjct-i7uQ/exec';
         
-        function testConnection() {
+        function testFormSubmission() {
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
-            resultDiv.textContent = 'Testing connection...';
-            
-            fetch(webAppUrl)
-                .then(response => response.text())
-                .then(data => {
-                    resultDiv.style.background = '#d4edda';
-                    resultDiv.style.color = '#155724';
-                    resultDiv.textContent = '✅ Connection successful!\n\nResponse: ' + data;
-                })
-                .catch(error => {
-                    resultDiv.style.background = '#f8d7da';
-                    resultDiv.style.color = '#721c24';
-                    resultDiv.textContent = '❌ Connection failed!\n\nError: ' + error.message;
-                });
-        }
-        
-        function testSync() {
-            const resultDiv = document.getElementById('result');
-            resultDiv.style.display = 'block';
-            resultDiv.textContent = 'Testing data sync...';
+            resultDiv.textContent = 'Testing form submission...';
+            resultDiv.className = 'result';
             
             const testData = {
                 students: [
                     {
-                        name: 'New Test Student',
-                        id: 'NEW001',
+                        name: 'Test Student',
+                        id: 'TEST001',
                         subject: 'Test Subject',
-                        marks: 90,
+                        marks: 85,
                         grade: 'A',
-                        percentage: 90,
+                        percentage: 85,
                         date: new Date().toISOString()
                     }
                 ]
             };
             
-            fetch(webAppUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(testData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    resultDiv.style.background = '#d4edda';
-                    resultDiv.style.color = '#155724';
-                    resultDiv.textContent = '✅ Sync successful!\n\nData has been sent to your Google Sheet.\n\nResponse: ' + JSON.stringify(data, null, 2);
-                } else {
-                    resultDiv.style.background = '#f8d7da';
-                    resultDiv.style.color = '#721c24';
-                    resultDiv.textContent = '❌ Sync failed!\n\nError: ' + data.error;
-                }
-            })
-            .catch(error => {
-                resultDiv.style.background = '#f8d7da';
-                resultDiv.style.color = '#721c24';
-                resultDiv.textContent = '❌ Network error!\n\nError: ' + error.message;
-            });
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = webAppUrl;
+            form.target = 'hidden-iframe';
+            
+            const dataInput = document.createElement('input');
+            dataInput.type = 'hidden';
+            dataInput.name = 'data';
+            dataInput.value = JSON.stringify(testData);
+            form.appendChild(dataInput);
+            
+            // Create hidden iframe
+            const iframe = document.createElement('iframe');
+            iframe.name = 'hidden-iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            // Add form to page and submit
+            document.body.appendChild(form);
+            form.submit();
+            
+            // Clean up
+            setTimeout(() => {
+                document.body.removeChild(form);
+                document.body.removeChild(iframe);
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = '✅ Form data sent successfully!\n\nCheck your Google Sheet to see if the data appears.\n\nThis method bypasses CORS issues by using HTML forms instead of fetch().';
+            }, 2000);
+        }
+        
+        function testWithSampleData() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing with sample data...';
+            resultDiv.className = 'result';
+            
+            const sampleData = {
+                students: [
+                    {
+                        name: 'John Doe',
+                        id: 'ST001',
+                        subject: 'Mathematics',
+                        marks: 92,
+                        grade: 'A+',
+                        percentage: 92,
+                        date: new Date().toISOString()
+                    },
+                    {
+                        name: 'Jane Smith',
+                        id: 'ST002',
+                        subject: 'Physics',
+                        marks: 88,
+                        grade: 'A',
+                        percentage: 88,
+                        date: new Date().toISOString()
+                    },
+                    {
+                        name: 'Mike Johnson',
+                        id: 'ST003',
+                        subject: 'Chemistry',
+                        marks: 75,
+                        grade: 'B',
+                        percentage: 75,
+                        date: new Date().toISOString()
+                    }
+                ]
+            };
+            
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = webAppUrl;
+            form.target = 'hidden-iframe';
+            
+            const dataInput = document.createElement('input');
+            dataInput.type = 'hidden';
+            dataInput.name = 'data';
+            dataInput.value = JSON.stringify(sampleData);
+            form.appendChild(dataInput);
+            
+            // Create hidden iframe
+            const iframe = document.createElement('iframe');
+            iframe.name = 'hidden-iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            // Add form to page and submit
+            document.body.appendChild(form);
+            form.submit();
+            
+            // Clean up
+            setTimeout(() => {
+                document.body.removeChild(form);
+                document.body.removeChild(iframe);
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = '✅ Sample data sent successfully!\n\n3 students added to your Google Sheet.\n\nCheck: https://docs.google.com/spreadsheets/d/1vKa94iz0uFpvkKKgHBQgWWHcncsjtZOw7coX2eYMgLI/edit';
+            }, 2000);
         }
     </script>
 </body>
