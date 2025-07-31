@@ -926,7 +926,7 @@
             
             document.getElementById('editName').value = student.name;
             document.getElementById('editId').value = student.id;
-            document.getElementById('editExamDate').value = student.examDate;
+            document.getElementById('marks').value = student.marks;
             document.getElementById('editExamType').value = student.examType;
             
             const editContainer = document.getElementById('editSubjectsContainer');
@@ -1026,7 +1026,7 @@
                 ...students[currentEditIndex],
                 name: name,
                 id: id,
-                examType: examType,
+                marks: marks,
                 subjects: subjects
             };
 
