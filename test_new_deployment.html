@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test New Deployment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007cba;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test New Deployment</h1>
+        <p>Testing your new Google Apps Script deployment:</p>
+        <p><strong>URL:</strong> https://script.google.com/macros/s/AKfycbykcepDKnzvljtQa52-4eF0PTw7_ZLsFH-YKi_hWadYfDJOrjugjVr0ZOIpmGnUNpKwog/exec</p>
+        
+        <button onclick="testConnection()">🔗 Test Connection</button>
+        <button onclick="testSync()">📊 Test Data Sync</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbysS1D5FTorCNrH8TugCCUFev2H31A4UeMGrNuogobbLPXr2RbT0e7JSNYui8m0rIMQ/exec';
+        
+        function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing connection...';
+            
+            fetch(webAppUrl)
+                .then(response => response.text())
+                .then(data => {
+                    resultDiv.style.background = '#d4edda';
+                    resultDiv.style.color = '#155724';
+                    resultDiv.textContent = '✅ Connection successful!\n\nResponse: ' + data;
+                })
+                .catch(error => {
+                    resultDiv.style.background = '#f8d7da';
+                    resultDiv.style.color = '#721c24';
+                    resultDiv.textContent = '❌ Connection failed!\n\nError: ' + error.message;
+                });
+        }
+        
+        function testSync() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Testing data sync...';
+            
+            const testData = {
+                students: [
+                    {
+                        name: 'New Test Student',
+                        id: 'NEW001',
+                        subject: 'Test Subject',
+                        marks: 90,
+                        grade: 'A',
+                        percentage: 90,
+                        date: new Date().toISOString()
+                    }
+                ]
+            };
+            
+            fetch(webAppUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.style.background = '#d4edda';
+                    resultDiv.style.color = '#155724';
+                    resultDiv.textContent = '✅ Sync successful!\n\nData has been sent to your Google Sheet.\n\nResponse: ' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.style.background = '#f8d7da';
+                    resultDiv.style.color = '#721c24';
+                    resultDiv.textContent = '❌ Sync failed!\n\nError: ' + data.error;
+                }
+            })
+            .catch(error => {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.textContent = '❌ Network error!\n\nError: ' + error.message;
+            });
+        }
+    </script>
+</body>
+</html> 
