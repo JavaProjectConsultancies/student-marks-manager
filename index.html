@@ -298,36 +298,44 @@
             margin-bottom: 30px;
         }
 
-        .info-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .result-table {
+        /* Loader Styles */
+        .loader-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
         }
 
-        .result-table th,
-        .result-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
         }
 
-        .result-table th {
-            background: #667eea;
+        .loader-text {
             color: white;
+            font-size: 18px;
             font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
         }
 
-        .result-summary {
-            background: #e3f2fd;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-content {
+            text-align: center;
         }
 
         @media print {
@@ -378,9 +386,17 @@
     </style>
 </head>
 <body>
+    <!-- Loader -->
+    <div class="loader-container" id="loaderContainer">
+        <div class="loader-content">
+            <div class="loader"></div>
+            <div class="loader-text" id="loaderText">Fetching data from Google Sheets...</div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header">
-            <h1>📊LEVO STUDY POINT V1.0</h1>
+            <h1>📊 LEVO Study Point</h1>
             <p>Manage multiple subjects per student with auto-sync to Excel</p>
         </div>
 
@@ -401,11 +417,7 @@
                         </div>
                     </div>
 
-                    <div class="form-row-3">
-                        <div class="form-group">
-                            <label for="examName">Exam Name:</label>
-                            <input type="text" id="examName" placeholder="e.g., Mid-Term, Final, Unit Test" required>
-                        </div>
+                    <div class="form-row">
                         <div class="form-group">
                             <label for="examDate">Exam Date:</label>
                             <input type="date" id="examDate" required>
@@ -528,11 +540,7 @@
                         <input type="text" id="editId" required>
                     </div>
                 </div>
-                <div class="form-row-3">
-                    <div class="form-group">
-                        <label for="editExamName">Exam Name:</label>
-                        <input type="text" id="editExamName" required>
-                    </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="editExamDate">Exam Date:</label>
                         <input type="date" id="editExamDate" required>
@@ -567,7 +575,7 @@
         let currentEditIndex = -1;
         
         // Google Apps Script URL
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxTyh3I6VkerTEcv5JsWtt-cjpj-sak6PxlBiXtRe118WkjW3KjnPO6UJfn1YxUadA6fQ/exec';
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxzSxMEDf9V1S87SRL4pDE5EF3B_tDtMAgRcxUG4jezhWChDMV4LrPZK4yQ-ljcloRsyg/exec';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -629,13 +637,12 @@
             const marks = parseInt(marksInput.value) || 0;
             const outOf = parseInt(marksInput.parentElement.querySelector('.subject-out-of').value) || 50;
             const percentage = Math.round((marks / outOf) * 100);
-            const grade = calculateGrade(marks);
+            const grade = calculateGrade(percentage);
             gradeDisplay.textContent = `Grade: ${grade} (${percentage}%)`;
         }
 
         function calculateGrade(marks) {
-            if (marks >= 40) return 'A+';
-            if (marks >= 35) return 'A';
+            if (marks >= 35) return 'A+';
             if (marks >= 30) return 'B+';
             if (marks >= 25) return 'B';
             if (marks >= 20) return 'C';
@@ -645,7 +652,6 @@
         function addStudent() {
             const name = document.getElementById('studentName').value;
             const id = document.getElementById('studentId').value;
-            const examName = document.getElementById('examName').value;
             const examDate = document.getElementById('examDate').value;
             const examType = document.getElementById('examType').value;
             
@@ -669,7 +675,7 @@
                             name: subjectName,
                             marks: marks,
                             outOf: outOf,
-                            grade: calculateGrade(marks),
+                            grade: calculateGrade(percentage),
                             percentage: percentage
                         });
                     }
@@ -684,7 +690,6 @@
             const student = {
                 name: name,
                 id: id,
-                examName: examName,
                 examDate: examDate,
                 examType: examType,
                 subjects: subjects,
@@ -735,7 +740,7 @@
                         <div>
                             <div class="student-name">${student.name} (${student.id})</div>
                             <div class="exam-details">
-                                <strong>${student.examName}</strong> - ${student.examType} | Date: ${new Date(student.examDate).toLocaleDateString()}
+                                <strong>${student.examType}</strong> | Date: ${new Date(student.examDate).toLocaleDateString()}
                             </div>
                             <small>Average: ${averageMarks}% | Subjects: ${student.subjects.length}</small>
                         </div>
@@ -921,7 +926,6 @@
             
             document.getElementById('editName').value = student.name;
             document.getElementById('editId').value = student.id;
-            document.getElementById('editExamName').value = student.examName;
             document.getElementById('editExamDate').value = student.examDate;
             document.getElementById('editExamType').value = student.examType;
             
@@ -942,15 +946,33 @@
             
             const subjectName = existingSubject ? existingSubject.name : '';
             const subjectMarks = existingSubject ? existingSubject.marks : '';
+            const subjectOutOf = existingSubject ? existingSubject.outOf : 50;
             const grade = existingSubject ? existingSubject.grade : '-';
             
             subjectDiv.innerHTML = `
                 <input type="text" placeholder="Subject Name" class="edit-subject-name" value="${subjectName}" required>
-                <input type="number" placeholder="Marks" min="0" max="100" class="edit-subject-marks" value="${subjectMarks}" required>
+                <input type="number" placeholder="Marks" min="0" max="200" class="edit-subject-marks" value="${subjectMarks}" required>
+                <input type="number" placeholder="Out of" min="1" max="200" class="edit-subject-out-of" value="${subjectOutOf}" required>
                 <span class="edit-grade-display">Grade: ${grade}</span>
                 <button type="button" class="btn btn-danger btn-small" onclick="removeEditSubject(this)">Remove</button>
             `;
             editContainer.appendChild(subjectDiv);
+            
+            // Add event listeners for real-time grade updates
+            const marksInput = subjectDiv.querySelector('.edit-subject-marks');
+            const outOfInput = subjectDiv.querySelector('.edit-subject-out-of');
+            const gradeDisplay = subjectDiv.querySelector('.edit-grade-display');
+            
+            const updateEditGrade = () => {
+                const marks = parseInt(marksInput.value) || 0;
+                const outOf = parseInt(outOfInput.value) || 50;
+                const percentage = Math.round((marks / outOf) * 100);
+                const grade = calculateGrade(percentage);
+                gradeDisplay.textContent = `Grade: ${grade} (${percentage}%)`;
+            };
+            
+            marksInput.addEventListener('input', updateEditGrade);
+            outOfInput.addEventListener('input', updateEditGrade);
         }
 
         function removeEditSubject(button) {
@@ -965,7 +987,6 @@
 
             const name = document.getElementById('editName').value;
             const id = document.getElementById('editId').value;
-            const examName = document.getElementById('editExamName').value;
             const examDate = document.getElementById('editExamDate').value;
             const examType = document.getElementById('editExamType').value;
             
@@ -976,17 +997,21 @@
             subjectRows.forEach(row => {
                 const subjectNameInput = row.querySelector('.edit-subject-name');
                 const marksInput = row.querySelector('.edit-subject-marks');
+                const outOfInput = row.querySelector('.edit-subject-out-of');
                 
-                if (subjectNameInput && marksInput) {
+                if (subjectNameInput && marksInput && outOfInput) {
                     const subjectName = subjectNameInput.value;
                     const marks = parseInt(marksInput.value);
+                    const outOf = parseInt(outOfInput.value);
                     
-                    if (subjectName && !isNaN(marks) && marks >= 0 && marks <= 100) {
+                    if (subjectName && !isNaN(marks) && !isNaN(outOf) && marks >= 0 && outOf > 0) {
+                        const percentage = Math.round((marks / outOf) * 100);
                         subjects.push({
                             name: subjectName,
                             marks: marks,
-                            grade: calculateGrade(marks),
-                            percentage: marks
+                            outOf: outOf,
+                            grade: calculateGrade(percentage),
+                            percentage: percentage
                         });
                     }
                 }
@@ -1001,7 +1026,6 @@
                 ...students[currentEditIndex],
                 name: name,
                 id: id,
-                examName: examName,
                 examDate: examDate,
                 examType: examType,
                 subjects: subjects
@@ -1316,7 +1340,6 @@
                     flatData.push({
                         name: student.name,
                         id: student.id,
-                        examName: student.examName,
                         examType: student.examType,
                         examDate: student.examDate,
                         subject: subject.name,
@@ -1357,11 +1380,22 @@
             }, 2000);
         }
 
+        function hideLoader() {
+            const loaderContainer = document.getElementById('loaderContainer');
+            loaderContainer.style.display = 'none';
+        }
+
         function fetchFromGoogleSheets() {
             if (!webAppUrl) {
                 showAlert('Google Apps Script URL not configured', 'error');
                 return;
             }
+
+            // Show loader
+            const loaderContainer = document.getElementById('loaderContainer');
+            const loaderText = document.getElementById('loaderText');
+            loaderContainer.style.display = 'flex';
+            loaderText.textContent = 'Fetching data from Google Sheets...';
 
             showAlert('Fetching data from Google Sheets...', 'success');
             
@@ -1559,12 +1593,14 @@
                         saveStudents();
                         loadStudents();
                         updateStats();
+                        hideLoader();
                         showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
                     } else {
                         // If fetch fails, load from localStorage as backup
                         students = JSON.parse(localStorage.getItem('students')) || [];
                         loadStudents();
                         updateStats();
+                        hideLoader();
                         showAlert('Loaded data from local storage. Failed to fetch from Google Sheets.', 'error');
                     }
                 };
@@ -1637,6 +1673,7 @@
                         saveStudents();
                         loadStudents();
                         updateStats();
+                        hideLoader();
                         showAlert(`Successfully fetched ${students.length} students using alternative method!`, 'success');
                     } else {
                         throw new Error('Invalid response from alternative method');
@@ -1656,6 +1693,7 @@
                                 saveStudents();
                                 loadStudents();
                                 updateStats();
+                                hideLoader();
                                 showAlert(`Successfully fetched ${students.length} students using CORS proxy!`, 'success');
                             } else {
                                 throw new Error('Invalid response from CORS proxy');
@@ -1667,6 +1705,7 @@
                             students = JSON.parse(localStorage.getItem('students')) || [];
                             loadStudents();
                             updateStats();
+                            hideLoader();
                             showAlert('Loaded data from local storage. All fetch methods failed.', 'error');
                         });
                 });
@@ -1678,10 +1717,10 @@
                 return;
             }
 
-            let csv = 'Student Name,Student ID,Exam Name,Exam Type,Exam Date,Subject,Marks,Grade,Percentage,Date\n';
+            let csv = 'Student Name,Student ID,Exam Type,Exam Date,Subject,Marks,Grade,Percentage,Date\n';
             students.forEach(student => {
                 student.subjects.forEach(subject => {
-                    csv += `${student.name},${student.id},${student.examName},${student.examType},${new Date(student.examDate).toLocaleDateString()},${subject.name},${subject.marks},${subject.grade},${subject.percentage}%,${new Date(student.date).toLocaleDateString()}\n`;
+                    csv += `${student.name},${student.id},${student.examType},${new Date(student.examDate).toLocaleDateString()},${subject.name},${subject.marks},${subject.grade},${subject.percentage}%,${new Date(student.date).toLocaleDateString()}\n`;
                 });
             });
 
@@ -1873,7 +1912,7 @@
 
         function updateFilterOptions() {
             const examSelect = document.getElementById('filterExam');
-            const uniqueExams = [...new Set(students.map(student => student.examName))];
+            const uniqueExams = [...new Set(students.map(student => student.examType))];
             
             // Clear existing options except "All Exams"
             examSelect.innerHTML = '<option value="">All Exams</option>';
