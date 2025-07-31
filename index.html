@@ -629,7 +629,7 @@
             const marks = parseInt(marksInput.value) || 0;
             const outOf = parseInt(marksInput.parentElement.querySelector('.subject-out-of').value) || 50;
             const percentage = Math.round((marks / outOf) * 100);
-            const grade = calculateGrade(percentage);
+            const grade = calculateGrade(marks);
             gradeDisplay.textContent = `Grade: ${grade} (${percentage}%)`;
         }
 
