@@ -396,7 +396,7 @@
 
     <div class="container">
         <div class="header">
-            <h1>📊 LEVO Study Point</h1>
+            <h1>📊 LEVO STUDY POINT</h1>
             <p>Manage multiple subjects per student with auto-sync to Excel</p>
         </div>
 
@@ -1485,6 +1485,7 @@
                                     saveStudents();
                                     loadStudents();
                                     updateStats();
+                                    hideLoader();
                                     showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
                                     return;
                                 } else {
@@ -1534,6 +1535,7 @@
                             saveStudents();
                             loadStudents();
                             updateStats();
+                            hideLoader();
                             showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
                         } else {
                             throw new Error('Invalid response format');
@@ -1618,6 +1620,7 @@
                     } else {
                         // Try alternative method as final fallback
                         console.log('All standard methods timed out, trying alternative method...');
+                        hideLoader();
                         fetchWithAlternativeMethod();
                     }
                 }, 12000); // 12 second timeout
@@ -1636,6 +1639,7 @@
                     } else {
                         // Try alternative method as final fallback
                         console.log('All standard methods failed, trying alternative method...');
+                        hideLoader();
                         fetchWithAlternativeMethod();
                     }
                 };
@@ -1655,6 +1659,11 @@
         // Alternative fetch method using a different approach
         function fetchWithAlternativeMethod() {
             console.log('Trying alternative fetch method...');
+            
+            // Update loader text
+            const loaderText = document.getElementById('loaderText');
+            loaderText.textContent = 'Trying alternative fetch method...';
+            
             showAlert('Trying alternative fetch method...', 'info');
             
             // Try using a proxy service or different approach
@@ -1684,6 +1693,10 @@
                     // Try another proxy service
                     const corsProxyUrl = 'https://cors-anywhere.herokuapp.com/' + webAppUrl + '?action=fetch&t=' + Date.now();
                     console.log('Trying CORS proxy:', corsProxyUrl);
+                    
+                    // Update loader text for CORS proxy attempt
+                    const loaderText = document.getElementById('loaderText');
+                    loaderText.textContent = 'Trying CORS proxy...';
                     
                     fetch(corsProxyUrl)
                         .then(response => response.json())
