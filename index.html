@@ -461,11 +461,11 @@
                 <button class="btn btn-success" onclick="fetchFromGoogleSheets()">📥 Fetch from Google Sheets</button>
                 <button class="btn btn-warning" onclick="fetchWithAlternativeMethod()">🔄 Alternative Fetch</button>
                 <button class="btn btn-warning" onclick="syncToGoogleSheets()">📤 Sync to Google Sheets</button>
-                <button class="btn" onclick="openGoogleSheets()" hidden="hidden">📈 Open Google Sheet</button>
+                <button class="btn" onclick="openGoogleSheets()">📈 Open Google Sheet</button>
                 <button class="btn btn-secondary" onclick="exportToCSV()">📄 Export to CSV</button>
-                <button class="btn btn-info" onclick="printAllResults()" >🖨️ Print All Results</button>
-                <button class="btn btn-primary" onclick="saveAllResultsAsPDF()" hidden="hidden">💾 Save All as PDF</button>
-                <button class="btn" onclick="clearAllData()" hidden="hidden" >🗑️ Clear All Data</button>
+                <button class="btn btn-info" onclick="printAllResults()">🖨️ Print All Results</button>
+                <button class="btn btn-primary" onclick="saveAllResultsAsPDF()">💾 Save All as PDF</button>
+                <button class="btn" onclick="clearAllData()" hidden="hidden">🗑️ Clear All Data</button>
             </div>
 
             <!-- Filter Section -->
@@ -637,13 +637,12 @@
             const marks = parseInt(marksInput.value) || 0;
             const outOf = parseInt(marksInput.parentElement.querySelector('.subject-out-of').value) || 50;
             const percentage = Math.round((marks / outOf) * 100);
-            const grade = calculateGrade(marks);
+            const grade = calculateGrade(percentage);
             gradeDisplay.textContent = `Grade: ${grade} (${percentage}%)`;
         }
 
         function calculateGrade(marks) {
-            if (marks >= 40) return 'A+';
-            if (marks >= 35) return 'A';
+            if (marks >= 35) return 'A+';
             if (marks >= 30) return 'B+';
             if (marks >= 25) return 'B';
             if (marks >= 20) return 'C';
@@ -676,7 +675,7 @@
                             name: subjectName,
                             marks: marks,
                             outOf: outOf,
-                            grade: calculateGrade(marks),
+                            grade: calculateGrade(percentage),
                             percentage: percentage
                         });
                     }
@@ -863,7 +862,6 @@
                             
                             <div class="info-section">
                                 <h3>📝 Exam Details</h3>
-                                <p><strong>Exam Name:</strong> ${student.examName}</p>
                                 <p><strong>Exam Type:</strong> ${student.examType}</p>
                                 <p><strong>Exam Date:</strong> ${new Date(student.examDate).toLocaleDateString()}</p>
                             </div>
@@ -1035,8 +1033,12 @@
             saveStudents();
             loadStudents();
             updateStats();
+            
+            // Auto-sync to Google Sheets
+            syncToGoogleSheets();
+            
             closeEditModal();
-            showAlert('Student updated successfully!', 'success');
+            showAlert('Student updated successfully and synced to Google Sheets!', 'success');
         }
 
         function deleteStudent(index) {
@@ -1045,7 +1047,11 @@
                 saveStudents();
                 loadStudents();
                 updateStats();
-                showAlert('Student deleted successfully!', 'success');
+                
+                // Auto-sync to Google Sheets
+                syncToGoogleSheets();
+                
+                showAlert('Student deleted successfully and synced to Google Sheets!', 'success');
             }
         }
 
@@ -1214,7 +1220,6 @@
                             
                             <div class="info-section">
                                 <h3>📝 Exam Details</h3>
-                                <p><strong>Exam Name:</strong> ${student.examName}</p>
                                 <p><strong>Exam Type:</strong> ${student.examType}</p>
                                 <p><strong>Exam Date:</strong> ${new Date(student.examDate).toLocaleDateString()}</p>
                             </div>
@@ -1838,7 +1843,7 @@
                                 <div class="student-header">
                                     <h3>👤 ${student.name} (${student.id})</h3>
                                     <div class="exam-details">
-                                        <strong>${student.examName}</strong> - ${student.examType} | Date: ${new Date(student.examDate).toLocaleDateString()}
+                                        <strong>${student.examType}</strong> | Date: ${new Date(student.examDate).toLocaleDateString()}
                                     </div>
                                     <p>Average: ${averageMarks}% | Subjects: ${totalSubjects}</p>
                                 </div>
@@ -2030,7 +2035,7 @@
                                 <div class="student-header">
                                     <h3>👤 ${student.name} (${student.id})</h3>
                                     <div class="exam-details">
-                                        <strong>${student.examName}</strong> - ${student.examType} | Date: ${new Date(student.examDate).toLocaleDateString()}
+                                        <strong>${student.examType}</strong> | Date: ${new Date(student.examDate).toLocaleDateString()}
                                     </div>
                                     <p>Average: ${averageMarks}% | Subjects: ${totalSubjects}</p>
                                 </div>
