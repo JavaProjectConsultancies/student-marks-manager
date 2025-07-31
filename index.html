@@ -81,7 +81,7 @@
 
         .subject-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
             gap: 10px;
             align-items: center;
             margin-bottom: 10px;
@@ -431,6 +431,7 @@
                             <div class="subject-row">
                                 <input type="text" placeholder="Subject Name" class="subject-name" required>
                                 <input type="number" placeholder="Marks" min="0" max="100" class="subject-marks" required>
+                                <input type="number" placeholder="Out of" min="1" max="200" class="subject-out-of" value="50" required>
                                 <span class="grade-display">Grade: -</span>
                                 <button type="button" class="btn btn-danger btn-small" onclick="removeSubject(this)">Remove</button>
                             </div>
@@ -449,7 +450,37 @@
                 <button class="btn" onclick="openGoogleSheets()">📈 Open Google Sheet</button>
                 <button class="btn btn-secondary" onclick="exportToCSV()">📄 Export to CSV</button>
                 <button class="btn btn-info" onclick="printAllResults()">🖨️ Print All Results</button>
+                <button class="btn btn-primary" onclick="saveAllResultsAsPDF()">💾 Save All as PDF</button>
                 <button class="btn" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+
+            <!-- Filter Section -->
+            <div style="margin: 20px 0; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                <h3>🔍 Filter Students</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div>
+                        <label for="filterName">Search by Name:</label>
+                        <input type="text" id="filterName" placeholder="Enter student name..." onkeyup="filterStudents()">
+                    </div>
+                    <div>
+                        <label for="filterExam">Filter by Exam:</label>
+                        <select id="filterExam" onchange="filterStudents()">
+                            <option value="">All Exams</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filterGrade">Filter by Grade:</label>
+                        <select id="filterGrade" onchange="filterStudents()">
+                            <option value="">All Grades</option>
+                            <option value="A+">A+</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="F">F</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <!-- Statistics -->
@@ -534,12 +565,12 @@
         let currentEditIndex = -1;
         
         // Google Apps Script URL
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycby3C7NmtoWv9SUQpRksfhWh_qj2EVE-Ni6W15MyVxMKE4MZFHZs1FhSErYr96ynQ5j2vA/exec';
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbzd8lil_N5fQU1CRc4lA1JUK1vLLmZqGNW8Sa1-ITOEMo8SJdWmDhHcg2nUk-dDcXDnGw/exec';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            loadStudents();
-            updateStats();
+            // Auto-fetch data from Google Sheets on load
+            fetchFromGoogleSheets();
             setupFormListeners();
         });
 
@@ -556,7 +587,7 @@
 
             // Add event listeners for grade calculation
             document.addEventListener('input', function(e) {
-                if (e.target.classList.contains('subject-marks')) {
+                if (e.target.classList.contains('subject-marks') || e.target.classList.contains('subject-out-of')) {
                     updateGradeDisplay(e.target);
                 }
             });
@@ -569,6 +600,7 @@
             newSubject.innerHTML = `
                 <input type="text" placeholder="Subject Name" class="subject-name" required>
                 <input type="number" placeholder="Marks" min="0" max="100" class="subject-marks" required>
+                <input type="number" placeholder="Out of" min="1" max="200" class="subject-out-of" value="50" required>
                 <span class="grade-display">Grade: -</span>
                 <button type="button" class="btn btn-danger btn-small" onclick="removeSubject(this)">Remove</button>
             `;
@@ -585,8 +617,10 @@
         function updateGradeDisplay(marksInput) {
             const gradeDisplay = marksInput.parentElement.querySelector('.grade-display');
             const marks = parseInt(marksInput.value) || 0;
-            const grade = calculateGrade(marks);
-            gradeDisplay.textContent = `Grade: ${grade}`;
+            const outOf = parseInt(marksInput.parentElement.querySelector('.subject-out-of').value) || 50;
+            const percentage = Math.round((marks / outOf) * 100);
+            const grade = calculateGrade(percentage);
+            gradeDisplay.textContent = `Grade: ${grade} (${percentage}%)`;
         }
 
         function calculateGrade(marks) {
@@ -612,17 +646,21 @@
             subjectRows.forEach(row => {
                 const subjectNameInput = row.querySelector('.subject-name');
                 const marksInput = row.querySelector('.subject-marks');
+                const outOfInput = row.querySelector('.subject-out-of');
                 
-                if (subjectNameInput && marksInput) {
+                if (subjectNameInput && marksInput && outOfInput) {
                     const subjectName = subjectNameInput.value;
                     const marks = parseInt(marksInput.value);
+                    const outOf = parseInt(outOfInput.value);
                     
-                    if (subjectName && !isNaN(marks) && marks >= 0 && marks <= 100) {
+                    if (subjectName && !isNaN(marks) && !isNaN(outOf) && marks >= 0 && outOf > 0) {
+                        const percentage = Math.round((marks / outOf) * 100);
                         subjects.push({
                             name: subjectName,
                             marks: marks,
-                            grade: calculateGrade(marks),
-                            percentage: marks
+                            outOf: outOf,
+                            grade: calculateGrade(percentage),
+                            percentage: percentage
                         });
                     }
                 }
@@ -663,6 +701,7 @@
                 <div class="subject-row">
                     <input type="text" placeholder="Subject Name" class="subject-name" required>
                     <input type="number" placeholder="Marks" min="0" max="100" class="subject-marks" required>
+                    <input type="number" placeholder="Out of" min="1" max="200" class="subject-out-of" value="50" required>
                     <span class="grade-display">Grade: -</span>
                     <button type="button" class="btn btn-danger btn-small" onclick="removeSubject(this)">Remove</button>
                 </div>
@@ -678,7 +717,8 @@
                 studentCard.className = 'student-card';
                 
                 const totalMarks = student.subjects.reduce((sum, subject) => sum + subject.marks, 0);
-                const averageMarks = Math.round(totalMarks / student.subjects.length);
+                const totalOutOf = student.subjects.reduce((sum, subject) => sum + subject.outOf, 0);
+                const averageMarks = Math.round((totalMarks / totalOutOf) * 100);
                 
                 studentCard.innerHTML = `
                     <div class="student-header">
@@ -698,7 +738,7 @@
                     <div class="subject-marks">
                         ${student.subjects.map(subject => `
                             <div class="subject-item">
-                                <strong>${subject.name}:</strong> ${subject.marks}% (${subject.grade})
+                                <strong>${subject.name}:</strong> ${subject.marks}/${subject.outOf} (${subject.grade})
                             </div>
                         `).join('')}
                     </div>
@@ -706,6 +746,9 @@
                 
                 display.appendChild(studentCard);
             });
+            
+            updateFilterOptions();
+            updateStats();
         }
 
         function showSimpleResult(index) {
@@ -1100,14 +1143,22 @@
                     updateStats();
                     showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
                 } else {
-                    showAlert('Failed to fetch data from Google Sheets', 'error');
+                    // If fetch fails, load from localStorage as backup
+                    students = JSON.parse(localStorage.getItem('students')) || [];
+                    loadStudents();
+                    updateStats();
+                    showAlert('Loaded data from local storage. Failed to fetch from Google Sheets.', 'error');
                 }
             };
             
             // Handle errors
             script.onerror = function() {
                 document.head.removeChild(script);
-                showAlert('Failed to connect to Google Sheets. Please check your internet connection.', 'error');
+                // Load from localStorage as backup
+                students = JSON.parse(localStorage.getItem('students')) || [];
+                loadStudents();
+                updateStats();
+                showAlert('Loaded data from local storage. Failed to connect to Google Sheets.', 'error');
             };
         }
 
@@ -1280,6 +1331,194 @@
                 updateStats();
                 showAlert('All data cleared successfully!', 'success');
             }
+        }
+
+        // Filter functionality
+        function filterStudents() {
+            const filterName = document.getElementById('filterName').value.toLowerCase();
+            const filterExam = document.getElementById('filterExam').value;
+            const filterGrade = document.getElementById('filterGrade').value;
+            
+            const studentCards = document.querySelectorAll('.student-card');
+            
+            studentCards.forEach(card => {
+                const studentName = card.querySelector('.student-name').textContent.toLowerCase();
+                const examDetails = card.querySelector('.exam-details').textContent;
+                const subjectItems = card.querySelectorAll('.subject-item');
+                
+                let nameMatch = studentName.includes(filterName);
+                let examMatch = !filterExam || examDetails.includes(filterExam);
+                let gradeMatch = !filterGrade;
+                
+                // Check if any subject has the selected grade
+                if (filterGrade) {
+                    subjectItems.forEach(item => {
+                        if (item.textContent.includes(filterGrade)) {
+                            gradeMatch = true;
+                        }
+                    });
+                }
+                
+                if (nameMatch && examMatch && gradeMatch) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function updateFilterOptions() {
+            const examSelect = document.getElementById('filterExam');
+            const uniqueExams = [...new Set(students.map(student => student.examName))];
+            
+            // Clear existing options except "All Exams"
+            examSelect.innerHTML = '<option value="">All Exams</option>';
+            
+            uniqueExams.forEach(exam => {
+                const option = document.createElement('option');
+                option.value = exam;
+                option.textContent = exam;
+                examSelect.appendChild(option);
+            });
+        }
+
+        // PDF Save functionality
+        function saveAllResultsAsPDF() {
+            if (students.length === 0) {
+                showAlert('No data to save as PDF', 'error');
+                return;
+            }
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>All Students Results - PDF</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 20px;
+                            background: white;
+                        }
+                        .header {
+                            text-align: center;
+                            border-bottom: 2px solid #333;
+                            padding-bottom: 20px;
+                            margin-bottom: 30px;
+                        }
+                        .student-section {
+                            border: 1px solid #ddd;
+                            margin: 20px 0;
+                            padding: 15px;
+                            border-radius: 8px;
+                            page-break-inside: avoid;
+                        }
+                        .student-header {
+                            background: #f8f9fa;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin-bottom: 15px;
+                        }
+                        .exam-details {
+                            background: #e3f2fd;
+                            padding: 8px;
+                            border-radius: 5px;
+                            margin: 5px 0;
+                            font-size: 12px;
+                            color: #1976d2;
+                        }
+                        table { 
+                            border-collapse: collapse; 
+                            width: 100%; 
+                            margin: 10px 0;
+                        }
+                        th, td { 
+                            border: 1px solid #ddd; 
+                            padding: 8px; 
+                            text-align: left; 
+                            font-size: 12px;
+                        }
+                        th { 
+                            background-color: #667eea; 
+                            color: white;
+                        }
+                        .summary {
+                            background: #f8f9fa;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin-top: 10px;
+                            font-size: 12px;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .student-section { page-break-inside: avoid; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 All Students Results Report</h1>
+                        <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                        <p>Total Students: ${students.length}</p>
+                    </div>
+                    
+                    ${students.map((student, index) => {
+                        const totalMarks = student.subjects.reduce((sum, subject) => sum + subject.marks, 0);
+                        const totalOutOf = student.subjects.reduce((sum, subject) => sum + subject.outOf, 0);
+                        const averageMarks = Math.round((totalMarks / totalOutOf) * 100);
+                        const totalSubjects = student.subjects.length;
+                        
+                        return `
+                            <div class="student-section">
+                                <div class="student-header">
+                                    <h3>👤 ${student.name} (${student.id})</h3>
+                                    <div class="exam-details">
+                                        <strong>${student.examName}</strong> - ${student.examType} | Date: ${new Date(student.examDate).toLocaleDateString()}
+                                    </div>
+                                    <p>Average: ${averageMarks}% | Subjects: ${totalSubjects}</p>
+                                </div>
+                                
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Marks</th>
+                                            <th>Out Of</th>
+                                            <th>Percentage</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${student.subjects.map(subject => `
+                                            <tr>
+                                                <td>${subject.name}</td>
+                                                <td>${subject.marks}</td>
+                                                <td>${subject.outOf}</td>
+                                                <td>${subject.percentage}%</td>
+                                                <td>${subject.grade}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                                
+                                <div class="summary">
+                                    <strong>Summary:</strong> Average: ${averageMarks}% | 
+                                    Highest: ${Math.max(...student.subjects.map(s => s.percentage))}% | 
+                                    Lowest: ${Math.min(...student.subjects.map(s => s.percentage))}% | 
+                                    Pass Rate: ${Math.round((student.subjects.filter(s => s.percentage >= 50).length / totalSubjects) * 100)}%
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            
+            // Wait for content to load then print
+            setTimeout(() => {
+                printWindow.print();
+            }, 1000);
         }
     </script>
 </body>
