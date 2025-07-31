@@ -380,7 +380,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>LEVO STUDY POINT</h1>
+            <h1>📊LEVO STUDY POINT V1.0</h1>
             <p>Manage multiple subjects per student with auto-sync to Excel</p>
         </div>
 
@@ -447,6 +447,7 @@
             <!-- Action Buttons -->
             <div style="margin: 20px 0;">
                 <button class="btn btn-success" onclick="fetchFromGoogleSheets()">📥 Fetch from Google Sheets</button>
+                <button class="btn btn-warning" onclick="fetchWithAlternativeMethod()">🔄 Alternative Fetch</button>
                 <button class="btn btn-warning" onclick="syncToGoogleSheets()">📤 Sync to Google Sheets</button>
                 <button class="btn" onclick="openGoogleSheets()">📈 Open Google Sheet</button>
                 <button class="btn btn-secondary" onclick="exportToCSV()">📄 Export to CSV</button>
@@ -566,7 +567,7 @@
         let currentEditIndex = -1;
         
         // Google Apps Script URL
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbzd8lil_N5fQU1CRc4lA1JUK1vLLmZqGNW8Sa1-ITOEMo8SJdWmDhHcg2nUk-dDcXDnGw/exec';
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxTyh3I6VkerTEcv5JsWtt-cjpj-sak6PxlBiXtRe118WkjW3KjnPO6UJfn1YxUadA6fQ/exec';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -1365,22 +1366,194 @@
             
             // Try multiple approaches to handle ERR_BLOCKED_BY_ORB
             let attempts = 0;
-            const maxAttempts = 3;
+            const maxAttempts = 6;
             
             function tryFetch() {
                 attempts++;
+                console.log(`Attempt ${attempts} to fetch data...`);
                 
-                // Use JSONP to fetch data (bypasses CORS)
+                // Method 1: Try using fetch with no-cors mode first
+                if (attempts === 1) {
+                    console.log('Method 1: Fetch with no-cors');
+                    fetch(webAppUrl + '?callback=handleFetchResponse&t=' + Date.now(), {
+                        mode: 'no-cors',
+                        method: 'GET'
+                    }).then(() => {
+                        console.log('Method 1 succeeded but can\'t read response due to no-cors');
+                        setTimeout(() => tryFetch(), 1000);
+                    }).catch((error) => {
+                        console.log('Method 1 failed:', error);
+                        setTimeout(() => tryFetch(), 1000);
+                    });
+                    return;
+                }
+                
+                // Method 2: Try using XMLHttpRequest with different settings
+                if (attempts === 2) {
+                    console.log('Method 2: XMLHttpRequest with callback');
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', webAppUrl + '?callback=handleFetchResponse&t=' + Date.now(), true);
+                    xhr.timeout = 10000;
+                    
+                    xhr.onload = function() {
+                        console.log('Method 2 response:', xhr.status);
+                        if (xhr.status === 200) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data && data.success && data.students) {
+                                    students = data.students;
+                                    saveStudents();
+                                    loadStudents();
+                                    updateStats();
+                                    showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
+                                    return;
+                                } else {
+                                    throw new Error('Invalid response format');
+                                }
+                            } catch (e) {
+                                console.log('Method 2 parse error:', e);
+                                setTimeout(() => tryFetch(), 1000);
+                            }
+                        } else {
+                            setTimeout(() => tryFetch(), 1000);
+                        }
+                    };
+                    
+                    xhr.onerror = function() {
+                        console.log('Method 2 network error');
+                        setTimeout(() => tryFetch(), 1000);
+                    };
+                    
+                    xhr.ontimeout = function() {
+                        console.log('Method 2 timeout');
+                        setTimeout(() => tryFetch(), 1000);
+                    };
+                    
+                    xhr.send();
+                    return;
+                }
+                
+                // Method 3: Try using a different URL structure (without callback parameter)
+                if (attempts === 3) {
+                    console.log('Method 3: XMLHttpRequest with action=fetch');
+                    const xhr2 = new XMLHttpRequest();
+                    xhr2.open('GET', webAppUrl + '?action=fetch&t=' + Date.now(), true);
+                    xhr2.timeout = 10000;
+                    
+                    xhr2.onload = function() {
+                        console.log('Method 3 response:', xhr2.status);
+                        if (xhr2.status === 200) {
+                            try {
+                                const data = JSON.parse(xhr2.responseText);
+                                if (data && data.success && data.students) {
+                                    students = data.students;
+                                    saveStudents();
+                                    loadStudents();
+                                    updateStats();
+                                    showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
+                                    return;
+                                } else {
+                                    throw new Error('Invalid response format');
+                                }
+                            } catch (e) {
+                                console.log('Method 3 parse error:', e);
+                                setTimeout(() => tryFetch(), 1000);
+                            }
+                        } else {
+                            setTimeout(() => tryFetch(), 1000);
+                        }
+                    };
+                    
+                    xhr2.onerror = function() {
+                        console.log('Method 3 network error');
+                        setTimeout(() => tryFetch(), 1000);
+                    };
+                    
+                    xhr2.ontimeout = function() {
+                        console.log('Method 3 timeout');
+                        setTimeout(() => tryFetch(), 1000);
+                    };
+                    
+                    xhr2.send();
+                    return;
+                }
+                
+                // Method 4: Try using fetch with different parameters
+                if (attempts === 4) {
+                    console.log('Method 4: Fetch with action parameter');
+                    fetch(webAppUrl + '?action=fetch&t=' + Date.now(), {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }).then(response => {
+                        console.log('Method 4 response:', response.status);
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Network response was not ok');
+                        }
+                    }).then(data => {
+                        if (data && data.success && data.students) {
+                            students = data.students;
+                            saveStudents();
+                            loadStudents();
+                            updateStats();
+                            showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
+                        } else {
+                            throw new Error('Invalid response format');
+                        }
+                    }).catch(error => {
+                        console.log('Method 4 error:', error);
+                        setTimeout(() => tryFetch(), 1000);
+                    });
+                    return;
+                }
+                
+                // Method 5: Try using a different approach with iframe
+                if (attempts === 5) {
+                    console.log('Method 5: Iframe approach');
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = webAppUrl + '?callback=handleFetchResponse&t=' + Date.now() + '&attempt=' + attempts;
+                    
+                    let iframeTimeout = setTimeout(() => {
+                        if (document.body.contains(iframe)) {
+                            document.body.removeChild(iframe);
+                        }
+                        setTimeout(() => tryFetch(), 1000);
+                    }, 10000);
+                    
+                    iframe.onload = function() {
+                        clearTimeout(iframeTimeout);
+                        if (document.body.contains(iframe)) {
+                            document.body.removeChild(iframe);
+                        }
+                        // Iframe loaded but we can't read the response
+                        setTimeout(() => tryFetch(), 1000);
+                    };
+                    
+                    document.body.appendChild(iframe);
+                    return;
+                }
+                
+                // Method 6: Use JSONP with better error handling
+                console.log('Method 6: JSONP with enhanced error handling');
                 const script = document.createElement('script');
-                script.src = webAppUrl + '?callback=handleFetchResponse&t=' + Date.now();
+                script.src = webAppUrl + '?callback=handleFetchResponse&t=' + Date.now() + '&attempt=' + attempts;
                 script.async = true;
                 
-                // Set up global callback
+                // Set up global callback with timeout
+                let callbackTimeout;
                 window.handleFetchResponse = function(data) {
-                    document.head.removeChild(script);
+                    console.log('JSONP callback received:', data);
+                    clearTimeout(callbackTimeout);
+                    if (document.head.contains(script)) {
+                        document.head.removeChild(script);
+                    }
                     delete window.handleFetchResponse;
                     
-                    if (data.success && data.students) {
+                    if (data && data.success && data.students) {
                         students = data.students;
                         saveStudents();
                         loadStudents();
@@ -1395,38 +1568,40 @@
                     }
                 };
                 
-                // Handle errors with retry logic
-                script.onerror = function() {
-                    document.head.removeChild(script);
-                    
-                    if (attempts < maxAttempts) {
-                        // Retry after a delay
-                        setTimeout(() => {
-                            tryFetch();
-                        }, 1000 * attempts); // Increasing delay
-                    } else {
-                        // Load from localStorage as backup after all attempts fail
-                        students = JSON.parse(localStorage.getItem('students')) || [];
-                        loadStudents();
-                        updateStats();
-                        showAlert('Loaded data from local storage. Failed to connect to Google Sheets after multiple attempts.', 'error');
-                    }
-                };
-                
-                // Add timeout
-                setTimeout(() => {
+                // Set timeout for callback
+                callbackTimeout = setTimeout(() => {
+                    console.log('JSONP timeout');
                     if (document.head.contains(script)) {
                         document.head.removeChild(script);
-                        if (attempts < maxAttempts) {
-                            setTimeout(() => tryFetch(), 1000 * attempts);
-                        } else {
-                            students = JSON.parse(localStorage.getItem('students')) || [];
-                            loadStudents();
-                            updateStats();
-                            showAlert('Loaded data from local storage. Request timed out.', 'error');
-                        }
                     }
-                }, 10000); // 10 second timeout
+                    delete window.handleFetchResponse;
+                    
+                    if (attempts < maxAttempts) {
+                        setTimeout(() => tryFetch(), 2000 * attempts);
+                    } else {
+                        // Try alternative method as final fallback
+                        console.log('All standard methods timed out, trying alternative method...');
+                        fetchWithAlternativeMethod();
+                    }
+                }, 12000); // 12 second timeout
+                
+                // Handle script load errors
+                script.onerror = function() {
+                    console.log('JSONP script error');
+                    clearTimeout(callbackTimeout);
+                    if (document.head.contains(script)) {
+                        document.head.removeChild(script);
+                    }
+                    delete window.handleFetchResponse;
+                    
+                    if (attempts < maxAttempts) {
+                        setTimeout(() => tryFetch(), 2000 * attempts);
+                    } else {
+                        // Try alternative method as final fallback
+                        console.log('All standard methods failed, trying alternative method...');
+                        fetchWithAlternativeMethod();
+                    }
+                };
                 
                 document.head.appendChild(script);
             }
@@ -1438,6 +1613,62 @@
             const sheetUrl = 'https://docs.google.com/spreadsheets/d/1vKa94iz0uFpvkKKgHBQgWWHcncsjtZOw7coX2eYMgLI/edit';
             window.open(sheetUrl, '_blank');
             showAlert('Opening your Google Sheet...', 'success');
+        }
+
+        // Alternative fetch method using a different approach
+        function fetchWithAlternativeMethod() {
+            console.log('Trying alternative fetch method...');
+            showAlert('Trying alternative fetch method...', 'info');
+            
+            // Try using a proxy service or different approach
+            const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(webAppUrl + '?action=fetch&t=' + Date.now());
+            console.log('Proxy URL:', proxyUrl);
+            
+            fetch(proxyUrl)
+                .then(response => {
+                    console.log('Alternative method response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Alternative method data:', data);
+                    if (data && data.success && data.students) {
+                        students = data.students;
+                        saveStudents();
+                        loadStudents();
+                        updateStats();
+                        showAlert(`Successfully fetched ${students.length} students using alternative method!`, 'success');
+                    } else {
+                        throw new Error('Invalid response from alternative method');
+                    }
+                })
+                .catch(error => {
+                    console.log('Alternative method failed:', error);
+                    // Try another proxy service
+                    const corsProxyUrl = 'https://cors-anywhere.herokuapp.com/' + webAppUrl + '?action=fetch&t=' + Date.now();
+                    console.log('Trying CORS proxy:', corsProxyUrl);
+                    
+                    fetch(corsProxyUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.success && data.students) {
+                                students = data.students;
+                                saveStudents();
+                                loadStudents();
+                                updateStats();
+                                showAlert(`Successfully fetched ${students.length} students using CORS proxy!`, 'success');
+                            } else {
+                                throw new Error('Invalid response from CORS proxy');
+                            }
+                        })
+                        .catch(corsError => {
+                            console.log('CORS proxy also failed:', corsError);
+                            // Fall back to localStorage
+                            students = JSON.parse(localStorage.getItem('students')) || [];
+                            loadStudents();
+                            updateStats();
+                            showAlert('Loaded data from local storage. All fetch methods failed.', 'error');
+                        });
+                });
         }
 
         function exportToCSV() {
