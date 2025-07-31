@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Marks Manager - Final Version</title>
+    <title>Student Marks Manager - Fixed Version</title>
     <style>
         * {
             margin: 0;
@@ -154,36 +154,6 @@
             font-size: 14px;
         }
 
-        .table-container {
-            overflow-x: auto;
-            margin-top: 30px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e1e5e9;
-        }
-
-        th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -229,58 +199,6 @@
             border: 1px solid #f5c6cb;
         }
 
-        .sync-status {
-            background: #e2e3e5;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            font-size: 14px;
-        }
-
-        .sync-enabled {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .sync-disabled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover {
-            color: #000;
-        }
-
         .student-card {
             border: 1px solid #e1e5e9;
             border-radius: 8px;
@@ -324,6 +242,94 @@
             font-size: 14px;
         }
 
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .result-page {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .result-header {
+            text-align: center;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .result-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .result-table th,
+        .result-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .result-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .result-summary {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
         @media print {
             body {
                 background: white;
@@ -364,14 +370,18 @@
                 grid-template-columns: 1fr;
                 gap: 5px;
             }
+
+            .result-info {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Student Marks Manager - Final Version</h1>
-            <p>Manage multiple subjects per student with exam details and comprehensive results</p>
+            <h1>📊 Student Marks Manager - Fixed Version</h1>
+            <p>Manage multiple subjects per student with auto-sync to Excel</p>
         </div>
 
         <div class="main-content">
@@ -428,7 +438,7 @@
                         <button type="button" class="btn btn-secondary" onclick="addSubject()">➕ Add Subject</button>
                     </div>
 
-                    <button type="submit" class="btn">💾 Save Student</button>
+                    <button type="submit" class="btn">💾 Save Student & Sync to Excel</button>
                 </form>
             </div>
 
@@ -596,20 +606,25 @@
             const examType = document.getElementById('examType').value;
             
             // Collect all subjects
-            const subjectRows = document.querySelectorAll('.subject-row');
+            const subjectRows = document.querySelectorAll('#subjectsList .subject-row');
             const subjects = [];
             
             subjectRows.forEach(row => {
-                const subjectName = row.querySelector('.subject-name').value;
-                const marks = parseInt(row.querySelector('.subject-marks').value);
+                const subjectNameInput = row.querySelector('.subject-name');
+                const marksInput = row.querySelector('.subject-marks');
                 
-                if (subjectName && !isNaN(marks) && marks >= 0 && marks <= 100) {
-                    subjects.push({
-                        name: subjectName,
-                        marks: marks,
-                        grade: calculateGrade(marks),
-                        percentage: marks
-                    });
+                if (subjectNameInput && marksInput) {
+                    const subjectName = subjectNameInput.value;
+                    const marks = parseInt(marksInput.value);
+                    
+                    if (subjectName && !isNaN(marks) && marks >= 0 && marks <= 100) {
+                        subjects.push({
+                            name: subjectName,
+                            marks: marks,
+                            grade: calculateGrade(marks),
+                            percentage: marks
+                        });
+                    }
                 }
             });
 
@@ -633,10 +648,13 @@
             loadStudents();
             updateStats();
             
+            // Auto-sync to Google Sheets
+            syncToGoogleSheets();
+            
             // Clear form
             document.getElementById('studentForm').reset();
             resetSubjectsList();
-            showAlert('Student added successfully!', 'success');
+            showAlert('Student added successfully and synced to Excel!', 'success');
         }
 
         function resetSubjectsList() {
@@ -673,7 +691,7 @@
                         </div>
                         <div>
                             <button class="btn btn-secondary btn-small" onclick="editStudent(${index})">Edit</button>
-                            <button class="btn btn-info btn-small" onclick="printStudentResult(${index})">Print Result</button>
+                            <button class="btn btn-info btn-small" onclick="showSimpleResult(${index})">View Result</button>
                             <button class="btn btn-danger btn-small" onclick="deleteStudent(${index})">Delete</button>
                         </div>
                     </div>
@@ -688,6 +706,159 @@
                 
                 display.appendChild(studentCard);
             });
+        }
+
+        function showSimpleResult(index) {
+            const student = students[index];
+            const totalMarks = student.subjects.reduce((sum, subject) => sum + subject.marks, 0);
+            const averageMarks = Math.round(totalMarks / student.subjects.length);
+            const highestMarks = Math.max(...student.subjects.map(s => s.marks));
+            const lowestMarks = Math.min(...student.subjects.map(s => s.marks));
+            const passCount = student.subjects.filter(s => s.marks >= 50).length;
+            const passRate = Math.round((passCount / student.subjects.length) * 100);
+            
+            const resultWindow = window.open('', '_blank');
+            resultWindow.document.write(`
+                <html>
+                <head>
+                    <title>Student Result - ${student.name}</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 0;
+                            padding: 20px;
+                            background: #f5f5f5;
+                        }
+                        .result-page {
+                            background: white;
+                            padding: 40px;
+                            border-radius: 15px;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                            max-width: 800px;
+                            margin: 0 auto;
+                        }
+                        .result-header {
+                            text-align: center;
+                            border-bottom: 3px solid #667eea;
+                            padding-bottom: 20px;
+                            margin-bottom: 30px;
+                        }
+                        .result-info {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 30px;
+                            margin-bottom: 30px;
+                        }
+                        .info-section {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            border-radius: 10px;
+                        }
+                        .result-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 20px 0;
+                        }
+                        .result-table th,
+                        .result-table td {
+                            border: 1px solid #ddd;
+                            padding: 12px;
+                            text-align: left;
+                        }
+                        .result-table th {
+                            background: #667eea;
+                            color: white;
+                            font-weight: bold;
+                        }
+                        .result-summary {
+                            background: #e3f2fd;
+                            padding: 20px;
+                            border-radius: 10px;
+                            margin-top: 20px;
+                        }
+                        .grade-A { color: #28a745; font-weight: bold; }
+                        .grade-B { color: #17a2b8; font-weight: bold; }
+                        .grade-C { color: #ffc107; font-weight: bold; }
+                        .grade-D { color: #fd7e14; font-weight: bold; }
+                        .grade-F { color: #dc3545; font-weight: bold; }
+                        @media print {
+                            body { background: white; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="result-page">
+                        <div class="result-header">
+                            <h1>📊 Student Result Report</h1>
+                            <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                        </div>
+                        
+                        <div class="result-info">
+                            <div class="info-section">
+                                <h3>👤 Student Information</h3>
+                                <p><strong>Name:</strong> ${student.name}</p>
+                                <p><strong>Student ID:</strong> ${student.id}</p>
+                                <p><strong>Date Added:</strong> ${new Date(student.date).toLocaleDateString()}</p>
+                            </div>
+                            
+                            <div class="info-section">
+                                <h3>📝 Exam Details</h3>
+                                <p><strong>Exam Name:</strong> ${student.examName}</p>
+                                <p><strong>Exam Type:</strong> ${student.examType}</p>
+                                <p><strong>Exam Date:</strong> ${new Date(student.examDate).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        
+                        <h3>📚 Subject Results</h3>
+                        <table class="result-table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Marks</th>
+                                    <th>Grade</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${student.subjects.map(subject => `
+                                    <tr>
+                                        <td>${subject.name}</td>
+                                        <td>${subject.marks}</td>
+                                        <td class="grade-${subject.grade.charAt(0)}">${subject.grade}</td>
+                                        <td>${subject.percentage}%</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        
+                        <div class="result-summary">
+                            <h3>📊 Performance Summary</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                <div>
+                                    <strong>Total Subjects:</strong> ${student.subjects.length}
+                                </div>
+                                <div>
+                                    <strong>Average Marks:</strong> ${averageMarks}%
+                                </div>
+                                <div>
+                                    <strong>Highest Marks:</strong> ${highestMarks}%
+                                </div>
+                                <div>
+                                    <strong>Lowest Marks:</strong> ${lowestMarks}%
+                                </div>
+                                <div>
+                                    <strong>Pass Rate:</strong> ${passRate}%
+                                </div>
+                                <div>
+                                    <strong>Overall Grade:</strong> <span class="grade-${calculateGrade(averageMarks).charAt(0)}">${calculateGrade(averageMarks)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            resultWindow.document.close();
         }
 
         function editStudent(index) {
@@ -749,16 +920,21 @@
             const subjects = [];
             
             subjectRows.forEach(row => {
-                const subjectName = row.querySelector('.edit-subject-name').value;
-                const marks = parseInt(row.querySelector('.edit-subject-marks').value);
+                const subjectNameInput = row.querySelector('.edit-subject-name');
+                const marksInput = row.querySelector('.edit-subject-marks');
                 
-                if (subjectName && !isNaN(marks) && marks >= 0 && marks <= 100) {
-                    subjects.push({
-                        name: subjectName,
-                        marks: marks,
-                        grade: calculateGrade(marks),
-                        percentage: marks
-                    });
+                if (subjectNameInput && marksInput) {
+                    const subjectName = subjectNameInput.value;
+                    const marks = parseInt(marksInput.value);
+                    
+                    if (subjectName && !isNaN(marks) && marks >= 0 && marks <= 100) {
+                        subjects.push({
+                            name: subjectName,
+                            marks: marks,
+                            grade: calculateGrade(marks),
+                            percentage: marks
+                        });
+                    }
                 }
             });
 
@@ -844,131 +1020,127 @@
             }, 3000);
         }
 
-        // Print individual student result
-        function printStudentResult(index) {
-            const student = students[index];
-            const totalMarks = student.subjects.reduce((sum, subject) => sum + subject.marks, 0);
-            const averageMarks = Math.round(totalMarks / student.subjects.length);
-            const totalSubjects = student.subjects.length;
+        // CORS-FREE FORM SUBMISSION METHOD
+        function syncToGoogleSheets() {
+            if (!webAppUrl) {
+                showAlert('Google Apps Script URL not configured', 'error');
+                return;
+            }
+
+            // Convert students data to flat format for Google Sheets
+            const flatData = [];
+            students.forEach(student => {
+                student.subjects.forEach(subject => {
+                    flatData.push({
+                        name: student.name,
+                        id: student.id,
+                        examName: student.examName,
+                        examType: student.examType,
+                        examDate: student.examDate,
+                        subject: subject.name,
+                        marks: subject.marks,
+                        grade: subject.grade,
+                        percentage: subject.percentage,
+                        date: student.date
+                    });
+                });
+            });
+
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = webAppUrl;
+            form.target = 'hidden-iframe';
             
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Student Result - ${student.name}</title>
-                    <style>
-                        body { 
-                            font-family: Arial, sans-serif; 
-                            margin: 20px;
-                            background: white;
-                        }
-                        .header {
-                            text-align: center;
-                            border-bottom: 2px solid #333;
-                            padding-bottom: 20px;
-                            margin-bottom: 30px;
-                        }
-                        .student-info {
-                            background: #f5f5f5;
-                            padding: 15px;
-                            border-radius: 8px;
-                            margin-bottom: 20px;
-                        }
-                        .exam-info {
-                            background: #e3f2fd;
-                            padding: 10px;
-                            border-radius: 5px;
-                            margin: 10px 0;
-                            color: #1976d2;
-                        }
-                        table { 
-                            border-collapse: collapse; 
-                            width: 100%; 
-                            margin: 20px 0;
-                        }
-                        th, td { 
-                            border: 1px solid #ddd; 
-                            padding: 12px; 
-                            text-align: left; 
-                        }
-                        th { 
-                            background-color: #667eea; 
-                            color: white;
-                        }
-                        .summary {
-                            background: #f8f9fa;
-                            padding: 15px;
-                            border-radius: 8px;
-                            margin-top: 20px;
-                        }
-                        .grade-A { color: #28a745; font-weight: bold; }
-                        .grade-B { color: #17a2b8; font-weight: bold; }
-                        .grade-C { color: #ffc107; font-weight: bold; }
-                        .grade-D { color: #fd7e14; font-weight: bold; }
-                        .grade-F { color: #dc3545; font-weight: bold; }
-                        @media print {
-                            body { margin: 0; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>📊 Student Result Report</h1>
-                        <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-                    </div>
-                    
-                    <div class="student-info">
-                        <h2>👤 Student Information</h2>
-                        <p><strong>Name:</strong> ${student.name}</p>
-                        <p><strong>Student ID:</strong> ${student.id}</p>
-                        <p><strong>Date Added:</strong> ${new Date(student.date).toLocaleDateString()}</p>
-                    </div>
-                    
-                    <div class="exam-info">
-                        <h3>📝 Exam Details</h3>
-                        <p><strong>Exam Name:</strong> ${student.examName}</p>
-                        <p><strong>Exam Type:</strong> ${student.examType}</p>
-                        <p><strong>Exam Date:</strong> ${new Date(student.examDate).toLocaleDateString()}</p>
-                    </div>
-                    
-                    <h3>📚 Subject Results</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>Marks</th>
-                                <th>Grade</th>
-                                <th>Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${student.subjects.map(subject => `
-                                <tr>
-                                    <td>${subject.name}</td>
-                                    <td>${subject.marks}</td>
-                                    <td class="grade-${subject.grade.charAt(0)}">${subject.grade}</td>
-                                    <td>${subject.percentage}%</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                    
-                    <div class="summary">
-                        <h3>📊 Performance Summary</h3>
-                        <p><strong>Total Subjects:</strong> ${totalSubjects}</p>
-                        <p><strong>Average Marks:</strong> ${averageMarks}%</p>
-                        <p><strong>Highest Marks:</strong> ${Math.max(...student.subjects.map(s => s.marks))}%</p>
-                        <p><strong>Lowest Marks:</strong> ${Math.min(...student.subjects.map(s => s.marks))}%</p>
-                        <p><strong>Pass Rate:</strong> ${Math.round((student.subjects.filter(s => s.marks >= 50).length / totalSubjects) * 100)}%</p>
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
+            const dataInput = document.createElement('input');
+            dataInput.type = 'hidden';
+            dataInput.name = 'data';
+            dataInput.value = JSON.stringify({ students: flatData });
+            form.appendChild(dataInput);
+            
+            // Create hidden iframe
+            const iframe = document.createElement('iframe');
+            iframe.name = 'hidden-iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            // Add form to page and submit
+            document.body.appendChild(form);
+            form.submit();
+            
+            // Clean up
+            setTimeout(() => {
+                document.body.removeChild(form);
+                document.body.removeChild(iframe);
+            }, 2000);
         }
 
-        // Print all students results
+        function fetchFromGoogleSheets() {
+            if (!webAppUrl) {
+                showAlert('Google Apps Script URL not configured', 'error');
+                return;
+            }
+
+            showAlert('Fetching data from Google Sheets...', 'success');
+            
+            // Use JSONP to fetch data (bypasses CORS)
+            const script = document.createElement('script');
+            script.src = webAppUrl + '?callback=handleFetchResponse';
+            document.head.appendChild(script);
+            
+            // Set up global callback
+            window.handleFetchResponse = function(data) {
+                document.head.removeChild(script);
+                delete window.handleFetchResponse;
+                
+                if (data.success && data.students) {
+                    students = data.students;
+                    saveStudents();
+                    loadStudents();
+                    updateStats();
+                    showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
+                } else {
+                    showAlert('Failed to fetch data from Google Sheets', 'error');
+                }
+            };
+            
+            // Handle errors
+            script.onerror = function() {
+                document.head.removeChild(script);
+                showAlert('Failed to connect to Google Sheets. Please check your internet connection.', 'error');
+            };
+        }
+
+        function openGoogleSheets() {
+            const sheetUrl = 'https://docs.google.com/spreadsheets/d/1vKa94iz0uFpvkKKgHBQgWWHcncsjtZOw7coX2eYMgLI/edit';
+            window.open(sheetUrl, '_blank');
+            showAlert('Opening your Google Sheet...', 'success');
+        }
+
+        function exportToCSV() {
+            if (students.length === 0) {
+                showAlert('No data to export', 'error');
+                return;
+            }
+
+            let csv = 'Student Name,Student ID,Exam Name,Exam Type,Exam Date,Subject,Marks,Grade,Percentage,Date\n';
+            students.forEach(student => {
+                student.subjects.forEach(subject => {
+                    csv += `${student.name},${student.id},${student.examName},${student.examType},${new Date(student.examDate).toLocaleDateString()},${subject.name},${subject.marks},${subject.grade},${subject.percentage}%,${new Date(student.date).toLocaleDateString()}\n`;
+                });
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'student_marks.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showAlert('Data exported to CSV file!', 'success');
+        }
+
         function printAllResults() {
             if (students.length === 0) {
                 showAlert('No data to print', 'error');
@@ -1098,128 +1270,6 @@
             `);
             printWindow.document.close();
             printWindow.print();
-        }
-
-        // CORS-FREE FORM SUBMISSION METHOD
-        function syncToGoogleSheets() {
-            if (!webAppUrl) {
-                showAlert('Google Apps Script URL not configured', 'error');
-                return;
-            }
-
-            // Convert students data to flat format for Google Sheets
-            const flatData = [];
-            students.forEach(student => {
-                student.subjects.forEach(subject => {
-                    flatData.push({
-                        name: student.name,
-                        id: student.id,
-                        examName: student.examName,
-                        examType: student.examType,
-                        examDate: student.examDate,
-                        subject: subject.name,
-                        marks: subject.marks,
-                        grade: subject.grade,
-                        percentage: subject.percentage,
-                        date: student.date
-                    });
-                });
-            });
-
-            // Create a form and submit it
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = webAppUrl;
-            form.target = 'hidden-iframe';
-            
-            const dataInput = document.createElement('input');
-            dataInput.type = 'hidden';
-            dataInput.name = 'data';
-            dataInput.value = JSON.stringify({ students: flatData });
-            form.appendChild(dataInput);
-            
-            // Create hidden iframe
-            const iframe = document.createElement('iframe');
-            iframe.name = 'hidden-iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-            
-            // Add form to page and submit
-            document.body.appendChild(form);
-            form.submit();
-            
-            // Clean up
-            setTimeout(() => {
-                document.body.removeChild(form);
-                document.body.removeChild(iframe);
-                showAlert('Data synced to Google Sheets!', 'success');
-            }, 2000);
-        }
-
-        function fetchFromGoogleSheets() {
-            if (!webAppUrl) {
-                showAlert('Google Apps Script URL not configured', 'error');
-                return;
-            }
-
-            showAlert('Fetching data from Google Sheets...', 'success');
-            
-            // Use JSONP to fetch data (bypasses CORS)
-            const script = document.createElement('script');
-            script.src = webAppUrl + '?callback=handleFetchResponse';
-            document.head.appendChild(script);
-            
-            // Set up global callback
-            window.handleFetchResponse = function(data) {
-                document.head.removeChild(script);
-                delete window.handleFetchResponse;
-                
-                if (data.success && data.students) {
-                    students = data.students;
-                    saveStudents();
-                    loadStudents();
-                    updateStats();
-                    showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
-                } else {
-                    showAlert('Failed to fetch data from Google Sheets', 'error');
-                }
-            };
-            
-            // Handle errors
-            script.onerror = function() {
-                document.head.removeChild(script);
-                showAlert('Failed to connect to Google Sheets. Please check your internet connection.', 'error');
-            };
-        }
-
-        function openGoogleSheets() {
-            const sheetUrl = 'https://docs.google.com/spreadsheets/d/1vKa94iz0uFpvkKKgHBQgWWHcncsjtZOw7coX2eYMgLI/edit';
-            window.open(sheetUrl, '_blank');
-            showAlert('Opening your Google Sheet...', 'success');
-        }
-
-        function exportToCSV() {
-            if (students.length === 0) {
-                showAlert('No data to export', 'error');
-                return;
-            }
-
-            let csv = 'Student Name,Student ID,Exam Name,Exam Type,Exam Date,Subject,Marks,Grade,Percentage,Date\n';
-            students.forEach(student => {
-                student.subjects.forEach(subject => {
-                    csv += `${student.name},${student.id},${student.examName},${student.examType},${new Date(student.examDate).toLocaleDateString()},${subject.name},${subject.marks},${subject.grade},${subject.percentage}%,${new Date(student.date).toLocaleDateString()}\n`;
-                });
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'student_marks.csv';
-            a.click();
-            window.URL.revokeObjectURL(url);
-            
-            showAlert('Data exported to CSV file!', 'success');
         }
 
         function clearAllData() {
