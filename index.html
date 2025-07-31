@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Marks Manager - CORS Fixed</title>
+    <title>Enhanced Student Marks Manager</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -57,6 +57,31 @@
 
         .form-group {
             margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .subjects-container {
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            background: white;
+        }
+
+        .subject-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
         }
 
         label {
@@ -112,6 +137,11 @@
 
         .btn-danger {
             background: #dc3545;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 14px;
         }
 
         .table-container {
@@ -220,11 +250,13 @@
 
         .modal-content {
             background-color: white;
-            margin: 15% auto;
+            margin: 5% auto;
             padding: 30px;
             border-radius: 10px;
-            width: 80%;
-            max-width: 500px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .close {
@@ -237,6 +269,40 @@
 
         .close:hover {
             color: #000;
+        }
+
+        .student-card {
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .student-name {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .subject-marks {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .subject-item {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 14px;
         }
 
         @media (max-width: 768px) {
@@ -253,39 +319,65 @@
                 width: 100%;
                 margin: 5px 0;
             }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .subject-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Student Marks Manager</h1>
-            <p>Manage student marks with automatic Google Sheets synchronization</p>
+            <h1>📊 Enhanced Student Marks Manager</h1>
+            <p>Manage multiple subjects per student with Google Sheets sync</p>
         </div>
 
         <div class="main-content">
             <!-- Form Section -->
             <div class="form-section">
-                <h2>➕ Add New Student</h2>
+                <h2>➕ Add New Student with Multiple Subjects</h2>
                 <form id="studentForm">
-                    <div class="form-group">
-                        <label for="studentName">Student Name:</label>
-                        <input type="text" id="studentName" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentName">Student Name:</label>
+                            <input type="text" id="studentName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentId">Student ID:</label>
+                            <input type="text" id="studentId" required>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="studentId">Student ID:</label>
-                        <input type="text" id="studentId" required>
+
+                    <div class="subjects-container">
+                        <h3>📚 Subjects & Marks</h3>
+                        <div id="subjectsList">
+                            <div class="subject-row">
+                                <input type="text" placeholder="Subject Name" class="subject-name" required>
+                                <input type="number" placeholder="Marks" min="0" max="100" class="subject-marks" required>
+                                <span class="grade-display">Grade: -</span>
+                                <button type="button" class="btn btn-danger btn-small" onclick="removeSubject(this)">Remove</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addSubject()">➕ Add Subject</button>
                     </div>
-                    <div class="form-group">
-                        <label for="subject">Subject:</label>
-                        <input type="text" id="subject" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="marks">Marks (out of 100):</label>
-                        <input type="number" id="marks" min="0" max="100" required>
-                    </div>
-                    <button type="submit" class="btn">Add Student</button>
+
+                    <button type="submit" class="btn">💾 Save Student</button>
                 </form>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="margin: 20px 0;">
+                <button class="btn btn-success" onclick="fetchFromGoogleSheets()">📥 Fetch from Google Sheets</button>
+                <button class="btn btn-warning" onclick="syncToGoogleSheets()">📤 Sync to Google Sheets</button>
+                <button class="btn" onclick="openGoogleSheets()">📈 Open Google Sheet</button>
+                <button class="btn btn-secondary" onclick="exportToCSV()">📄 Export to CSV</button>
+                <button class="btn" onclick="clearAllData()">🗑️ Clear All Data</button>
             </div>
 
             <!-- Statistics -->
@@ -295,12 +387,12 @@
                     <div class="stat-label">Total Students</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="averageMarks">0%</div>
-                    <div class="stat-label">Average Marks</div>
+                    <div class="stat-number" id="totalSubjects">0</div>
+                    <div class="stat-label">Total Subjects</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="highestMarks">0</div>
-                    <div class="stat-label">Highest Marks</div>
+                    <div class="stat-number" id="averageMarks">0%</div>
+                    <div class="stat-label">Average Marks</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="passRate">0%</div>
@@ -308,40 +400,9 @@
                 </div>
             </div>
 
-            <!-- Sync Status -->
-            <div class="sync-status" id="syncStatus">
-                <strong>Auto-Sync Status:</strong> 
-                <span id="syncStatusText">Disabled</span>
-                <button class="btn" onclick="toggleAutoSync()" id="syncToggleBtn">Enable Auto-Sync</button>
-            </div>
-
-            <!-- Action Buttons -->
-            <div style="margin: 20px 0;">
-                <button class="btn btn-success" onclick="exportToExcel()">📊 Export to Excel</button>
-                <button class="btn btn-warning" onclick="exportToCSV()">📄 Export to CSV</button>
-                <button class="btn btn-secondary" onclick="printReport()">🖨️ Print Report</button>
-                <button class="btn" onclick="openGoogleSheets()">📈 Open Google Sheet</button>
-                <button class="btn" onclick="manualSyncToGoogleSheets()">🔄 Manual Sync</button>
-            </div>
-
-            <!-- Students Table -->
-            <div class="table-container">
-                <table id="studentsTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>ID</th>
-                            <th>Subject</th>
-                            <th>Marks</th>
-                            <th>Grade</th>
-                            <th>Percentage</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentsTableBody">
-                    </tbody>
-                </table>
+            <!-- Students Display -->
+            <div id="studentsDisplay">
+                <!-- Students will be displayed here -->
             </div>
         </div>
     </div>
@@ -352,22 +413,20 @@
             <span class="close" onclick="closeEditModal()">&times;</span>
             <h2>Edit Student</h2>
             <form id="editForm">
-                <div class="form-group">
-                    <label for="editName">Student Name:</label>
-                    <input type="text" id="editName" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editName">Student Name:</label>
+                        <input type="text" id="editName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editId">Student ID:</label>
+                        <input type="text" id="editId" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="editId">Student ID:</label>
-                    <input type="text" id="editId" required>
+                <div id="editSubjectsContainer">
+                    <!-- Edit subjects will be added here -->
                 </div>
-                <div class="form-group">
-                    <label for="editSubject">Subject:</label>
-                    <input type="text" id="editSubject" required>
-                </div>
-                <div class="form-group">
-                    <label for="editMarks">Marks:</label>
-                    <input type="number" id="editMarks" min="0" max="100" required>
-                </div>
+                <button type="button" class="btn btn-secondary" onclick="addEditSubject()">➕ Add Subject</button>
                 <button type="submit" class="btn">Update Student</button>
             </form>
         </div>
@@ -376,141 +435,62 @@
     <script>
         // Global variables
         let students = JSON.parse(localStorage.getItem('students')) || [];
-        let autoSyncEnabled = localStorage.getItem('autoSyncEnabled') === 'true';
         let currentEditIndex = -1;
         
-        // Google Apps Script URL - Update this with your new deployment URL
+        // Google Apps Script URL
         const webAppUrl = 'https://script.google.com/macros/s/AKfycbxiUEGuAsYJ4q12z3j-OrPK91mLI8hrsCIDKGy6HbFYk4SEzHhnjGLOxh_g5Fjct-i7uQ/exec';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             loadStudents();
             updateStats();
-            updateSyncStatus();
+            setupFormListeners();
         });
 
-        // Form submission
-        document.getElementById('studentForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            addStudent();
-        });
+        function setupFormListeners() {
+            document.getElementById('studentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addStudent();
+            });
 
-        // Edit form submission
-        document.getElementById('editForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            updateStudent();
-        });
+            document.getElementById('editForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateStudent();
+            });
 
-        function addStudent() {
-            const name = document.getElementById('studentName').value;
-            const id = document.getElementById('studentId').value;
-            const subject = document.getElementById('subject').value;
-            const marks = parseInt(document.getElementById('marks').value);
-
-            if (marks < 0 || marks > 100) {
-                showAlert('Marks must be between 0 and 100', 'error');
-                return;
-            }
-
-            const grade = calculateGrade(marks);
-            const percentage = marks;
-            const date = new Date().toISOString();
-
-            const student = {
-                name: name,
-                id: id,
-                subject: subject,
-                marks: marks,
-                grade: grade,
-                percentage: percentage,
-                date: date
-            };
-
-            students.push(student);
-            saveStudents();
-            loadStudents();
-            updateStats();
-            
-            // Auto-sync if enabled
-            if (autoSyncEnabled) {
-                autoSyncToGoogleSheets();
-            }
-
-            // Clear form
-            document.getElementById('studentForm').reset();
-            showAlert('Student added successfully!', 'success');
-        }
-
-        function updateStudent() {
-            if (currentEditIndex === -1) return;
-
-            const name = document.getElementById('editName').value;
-            const id = document.getElementById('editId').value;
-            const subject = document.getElementById('editSubject').value;
-            const marks = parseInt(document.getElementById('editMarks').value);
-
-            if (marks < 0 || marks > 100) {
-                showAlert('Marks must be between 0 and 100', 'error');
-                return;
-            }
-
-            const grade = calculateGrade(marks);
-            const percentage = marks;
-
-            students[currentEditIndex] = {
-                ...students[currentEditIndex],
-                name: name,
-                id: id,
-                subject: subject,
-                marks: marks,
-                grade: grade,
-                percentage: percentage
-            };
-
-            saveStudents();
-            loadStudents();
-            updateStats();
-            
-            // Auto-sync if enabled
-            if (autoSyncEnabled) {
-                autoSyncToGoogleSheets();
-            }
-
-            closeEditModal();
-            showAlert('Student updated successfully!', 'success');
-        }
-
-        function deleteStudent(index) {
-            if (confirm('Are you sure you want to delete this student?')) {
-                students.splice(index, 1);
-                saveStudents();
-                loadStudents();
-                updateStats();
-                
-                // Auto-sync if enabled
-                if (autoSyncEnabled) {
-                    autoSyncToGoogleSheets();
+            // Add event listeners for grade calculation
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('subject-marks')) {
+                    updateGradeDisplay(e.target);
                 }
-                
-                showAlert('Student deleted successfully!', 'success');
+            });
+        }
+
+        function addSubject() {
+            const subjectsList = document.getElementById('subjectsList');
+            const newSubject = document.createElement('div');
+            newSubject.className = 'subject-row';
+            newSubject.innerHTML = `
+                <input type="text" placeholder="Subject Name" class="subject-name" required>
+                <input type="number" placeholder="Marks" min="0" max="100" class="subject-marks" required>
+                <span class="grade-display">Grade: -</span>
+                <button type="button" class="btn btn-danger btn-small" onclick="removeSubject(this)">Remove</button>
+            `;
+            subjectsList.appendChild(newSubject);
+        }
+
+        function removeSubject(button) {
+            const subjectsList = document.getElementById('subjectsList');
+            if (subjectsList.children.length > 1) {
+                button.closest('.subject-row').remove();
             }
         }
 
-        function editStudent(index) {
-            const student = students[index];
-            currentEditIndex = index;
-            
-            document.getElementById('editName').value = student.name;
-            document.getElementById('editId').value = student.id;
-            document.getElementById('editSubject').value = student.subject;
-            document.getElementById('editMarks').value = student.marks;
-            
-            document.getElementById('editModal').style.display = 'block';
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-            currentEditIndex = -1;
+        function updateGradeDisplay(marksInput) {
+            const gradeDisplay = marksInput.parentElement.querySelector('.grade-display');
+            const marks = parseInt(marksInput.value) || 0;
+            const grade = calculateGrade(marks);
+            gradeDisplay.textContent = `Grade: ${grade}`;
         }
 
         function calculateGrade(marks) {
@@ -522,47 +502,224 @@
             return 'F';
         }
 
+        function addStudent() {
+            const name = document.getElementById('studentName').value;
+            const id = document.getElementById('studentId').value;
+            
+            // Collect all subjects
+            const subjectRows = document.querySelectorAll('.subject-row');
+            const subjects = [];
+            
+            subjectRows.forEach(row => {
+                const subjectName = row.querySelector('.subject-name').value;
+                const marks = parseInt(row.querySelector('.subject-marks').value);
+                
+                if (subjectName && !isNaN(marks) && marks >= 0 && marks <= 100) {
+                    subjects.push({
+                        name: subjectName,
+                        marks: marks,
+                        grade: calculateGrade(marks),
+                        percentage: marks
+                    });
+                }
+            });
+
+            if (subjects.length === 0) {
+                showAlert('Please add at least one subject with valid marks', 'error');
+                return;
+            }
+
+            const student = {
+                name: name,
+                id: id,
+                subjects: subjects,
+                date: new Date().toISOString()
+            };
+
+            students.push(student);
+            saveStudents();
+            loadStudents();
+            updateStats();
+            
+            // Clear form
+            document.getElementById('studentForm').reset();
+            resetSubjectsList();
+            showAlert('Student added successfully!', 'success');
+        }
+
+        function resetSubjectsList() {
+            const subjectsList = document.getElementById('subjectsList');
+            subjectsList.innerHTML = `
+                <div class="subject-row">
+                    <input type="text" placeholder="Subject Name" class="subject-name" required>
+                    <input type="number" placeholder="Marks" min="0" max="100" class="subject-marks" required>
+                    <span class="grade-display">Grade: -</span>
+                    <button type="button" class="btn btn-danger btn-small" onclick="removeSubject(this)">Remove</button>
+                </div>
+            `;
+        }
+
         function loadStudents() {
-            const tbody = document.getElementById('studentsTableBody');
-            tbody.innerHTML = '';
+            const display = document.getElementById('studentsDisplay');
+            display.innerHTML = '';
 
             students.forEach((student, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${student.name}</td>
-                    <td>${student.id}</td>
-                    <td>${student.subject}</td>
-                    <td>${student.marks}</td>
-                    <td>${student.grade}</td>
-                    <td>${student.percentage}%</td>
-                    <td>${new Date(student.date).toLocaleDateString()}</td>
-                    <td>
-                        <button class="btn btn-secondary" onclick="editStudent(${index})">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteStudent(${index})">Delete</button>
-                    </td>
+                const studentCard = document.createElement('div');
+                studentCard.className = 'student-card';
+                
+                const totalMarks = student.subjects.reduce((sum, subject) => sum + subject.marks, 0);
+                const averageMarks = Math.round(totalMarks / student.subjects.length);
+                
+                studentCard.innerHTML = `
+                    <div class="student-header">
+                        <div>
+                            <div class="student-name">${student.name} (${student.id})</div>
+                            <small>Average: ${averageMarks}% | Subjects: ${student.subjects.length}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-secondary btn-small" onclick="editStudent(${index})">Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteStudent(${index})">Delete</button>
+                        </div>
+                    </div>
+                    <div class="subject-marks">
+                        ${student.subjects.map(subject => `
+                            <div class="subject-item">
+                                <strong>${subject.name}:</strong> ${subject.marks}% (${subject.grade})
+                            </div>
+                        `).join('')}
+                    </div>
                 `;
-                tbody.appendChild(row);
+                
+                display.appendChild(studentCard);
             });
+        }
+
+        function editStudent(index) {
+            const student = students[index];
+            currentEditIndex = index;
+            
+            document.getElementById('editName').value = student.name;
+            document.getElementById('editId').value = student.id;
+            
+            const editContainer = document.getElementById('editSubjectsContainer');
+            editContainer.innerHTML = '';
+            
+            student.subjects.forEach((subject, subIndex) => {
+                addEditSubject(subject);
+            });
+            
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function addEditSubject(existingSubject = null) {
+            const editContainer = document.getElementById('editSubjectsContainer');
+            const subjectDiv = document.createElement('div');
+            subjectDiv.className = 'subject-row';
+            
+            const subjectName = existingSubject ? existingSubject.name : '';
+            const subjectMarks = existingSubject ? existingSubject.marks : '';
+            const grade = existingSubject ? existingSubject.grade : '-';
+            
+            subjectDiv.innerHTML = `
+                <input type="text" placeholder="Subject Name" class="edit-subject-name" value="${subjectName}" required>
+                <input type="number" placeholder="Marks" min="0" max="100" class="edit-subject-marks" value="${subjectMarks}" required>
+                <span class="edit-grade-display">Grade: ${grade}</span>
+                <button type="button" class="btn btn-danger btn-small" onclick="removeEditSubject(this)">Remove</button>
+            `;
+            editContainer.appendChild(subjectDiv);
+        }
+
+        function removeEditSubject(button) {
+            const editContainer = document.getElementById('editSubjectsContainer');
+            if (editContainer.children.length > 1) {
+                button.closest('.subject-row').remove();
+            }
+        }
+
+        function updateStudent() {
+            if (currentEditIndex === -1) return;
+
+            const name = document.getElementById('editName').value;
+            const id = document.getElementById('editId').value;
+            
+            // Collect all subjects from edit form
+            const subjectRows = document.querySelectorAll('#editSubjectsContainer .subject-row');
+            const subjects = [];
+            
+            subjectRows.forEach(row => {
+                const subjectName = row.querySelector('.edit-subject-name').value;
+                const marks = parseInt(row.querySelector('.edit-subject-marks').value);
+                
+                if (subjectName && !isNaN(marks) && marks >= 0 && marks <= 100) {
+                    subjects.push({
+                        name: subjectName,
+                        marks: marks,
+                        grade: calculateGrade(marks),
+                        percentage: marks
+                    });
+                }
+            });
+
+            if (subjects.length === 0) {
+                showAlert('Please add at least one subject with valid marks', 'error');
+                return;
+            }
+
+            students[currentEditIndex] = {
+                ...students[currentEditIndex],
+                name: name,
+                id: id,
+                subjects: subjects
+            };
+
+            saveStudents();
+            loadStudents();
+            updateStats();
+            closeEditModal();
+            showAlert('Student updated successfully!', 'success');
+        }
+
+        function deleteStudent(index) {
+            if (confirm('Are you sure you want to delete this student?')) {
+                students.splice(index, 1);
+                saveStudents();
+                loadStudents();
+                updateStats();
+                showAlert('Student deleted successfully!', 'success');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentEditIndex = -1;
         }
 
         function updateStats() {
             if (students.length === 0) {
                 document.getElementById('totalStudents').textContent = '0';
+                document.getElementById('totalSubjects').textContent = '0';
                 document.getElementById('averageMarks').textContent = '0%';
-                document.getElementById('highestMarks').textContent = '0';
                 document.getElementById('passRate').textContent = '0%';
                 return;
             }
 
             const totalStudents = students.length;
-            const averageMarks = Math.round(students.reduce((sum, student) => sum + student.marks, 0) / totalStudents);
-            const highestMarks = Math.max(...students.map(student => student.marks));
-            const passCount = students.filter(student => student.marks >= 50).length;
-            const passRate = Math.round((passCount / totalStudents) * 100);
+            const totalSubjects = students.reduce((sum, student) => sum + student.subjects.length, 0);
+            
+            const allMarks = [];
+            students.forEach(student => {
+                student.subjects.forEach(subject => {
+                    allMarks.push(subject.marks);
+                });
+            });
+            
+            const averageMarks = Math.round(allMarks.reduce((sum, mark) => sum + mark, 0) / allMarks.length);
+            const passCount = allMarks.filter(mark => mark >= 50).length;
+            const passRate = Math.round((passCount / allMarks.length) * 100);
 
             document.getElementById('totalStudents').textContent = totalStudents;
+            document.getElementById('totalSubjects').textContent = totalSubjects;
             document.getElementById('averageMarks').textContent = averageMarks + '%';
-            document.getElementById('highestMarks').textContent = highestMarks;
             document.getElementById('passRate').textContent = passRate + '%';
         }
 
@@ -582,42 +739,30 @@
             }, 3000);
         }
 
-        function toggleAutoSync() {
-            autoSyncEnabled = !autoSyncEnabled;
-            localStorage.setItem('autoSyncEnabled', autoSyncEnabled.toString());
-            updateSyncStatus();
-            
-            if (autoSyncEnabled) {
-                showAlert('Auto-sync enabled! Data will be synced automatically.', 'success');
-            } else {
-                showAlert('Auto-sync disabled.', 'error');
-            }
-        }
-
-        function updateSyncStatus() {
-            const statusText = document.getElementById('syncStatusText');
-            const toggleBtn = document.getElementById('syncToggleBtn');
-            const statusDiv = document.getElementById('syncStatus');
-            
-            if (autoSyncEnabled) {
-                statusText.textContent = 'Enabled';
-                toggleBtn.textContent = 'Disable Auto-Sync';
-                statusDiv.className = 'sync-status sync-enabled';
-            } else {
-                statusText.textContent = 'Disabled';
-                toggleBtn.textContent = 'Enable Auto-Sync';
-                statusDiv.className = 'sync-status sync-disabled';
-            }
-        }
-
         // CORS-FREE FORM SUBMISSION METHOD
-        function autoSyncToGoogleSheets() {
+        function syncToGoogleSheets() {
             if (!webAppUrl) {
                 showAlert('Google Apps Script URL not configured', 'error');
                 return;
             }
 
-            // Create a form and submit it (bypasses CORS)
+            // Convert students data to flat format for Google Sheets
+            const flatData = [];
+            students.forEach(student => {
+                student.subjects.forEach(subject => {
+                    flatData.push({
+                        name: student.name,
+                        id: student.id,
+                        subject: subject.name,
+                        marks: subject.marks,
+                        grade: subject.grade,
+                        percentage: subject.percentage,
+                        date: student.date
+                    });
+                });
+            });
+
+            // Create a form and submit it
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = webAppUrl;
@@ -626,7 +771,7 @@
             const dataInput = document.createElement('input');
             dataInput.type = 'hidden';
             dataInput.name = 'data';
-            dataInput.value = JSON.stringify({ students: students });
+            dataInput.value = JSON.stringify({ students: flatData });
             form.appendChild(dataInput);
             
             // Create hidden iframe
@@ -647,40 +792,40 @@
             }, 2000);
         }
 
-        function manualSyncToGoogleSheets() {
+        function fetchFromGoogleSheets() {
             if (!webAppUrl) {
                 showAlert('Google Apps Script URL not configured', 'error');
                 return;
             }
 
-            // Create a form and submit it (bypasses CORS)
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = webAppUrl;
-            form.target = 'hidden-iframe';
+            showAlert('Fetching data from Google Sheets...', 'success');
             
-            const dataInput = document.createElement('input');
-            dataInput.type = 'hidden';
-            dataInput.name = 'data';
-            dataInput.value = JSON.stringify({ students: students });
-            form.appendChild(dataInput);
+            // Use JSONP to fetch data (bypasses CORS)
+            const script = document.createElement('script');
+            script.src = webAppUrl + '?callback=handleFetchResponse';
+            document.head.appendChild(script);
             
-            // Create hidden iframe
-            const iframe = document.createElement('iframe');
-            iframe.name = 'hidden-iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
+            // Set up global callback
+            window.handleFetchResponse = function(data) {
+                document.head.removeChild(script);
+                delete window.handleFetchResponse;
+                
+                if (data.success && data.students) {
+                    students = data.students;
+                    saveStudents();
+                    loadStudents();
+                    updateStats();
+                    showAlert(`Successfully fetched ${students.length} students from Google Sheets!`, 'success');
+                } else {
+                    showAlert('Failed to fetch data from Google Sheets', 'error');
+                }
+            };
             
-            // Add form to page and submit
-            document.body.appendChild(form);
-            form.submit();
-            
-            // Clean up
-            setTimeout(() => {
-                document.body.removeChild(form);
-                document.body.removeChild(iframe);
-                showAlert('Data synced to Google Sheets!', 'success');
-            }, 2000);
+            // Handle errors
+            script.onerror = function() {
+                document.head.removeChild(script);
+                showAlert('Failed to connect to Google Sheets. Please check your internet connection.', 'error');
+            };
         }
 
         function openGoogleSheets() {
@@ -689,15 +834,17 @@
             showAlert('Opening your Google Sheet...', 'success');
         }
 
-        function exportToExcel() {
+        function exportToCSV() {
             if (students.length === 0) {
                 showAlert('No data to export', 'error');
                 return;
             }
 
-            let csv = 'Name,ID,Subject,Marks,Grade,Percentage,Date\n';
+            let csv = 'Student Name,Student ID,Subject,Marks,Grade,Percentage,Date\n';
             students.forEach(student => {
-                csv += `${student.name},${student.id},${student.subject},${student.marks},${student.grade},${student.percentage}%,${new Date(student.date).toLocaleDateString()}\n`;
+                student.subjects.forEach(subject => {
+                    csv += `${student.name},${student.id},${subject.name},${subject.marks},${subject.grade},${subject.percentage}%,${new Date(student.date).toLocaleDateString()}\n`;
+                });
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -711,57 +858,14 @@
             showAlert('Data exported to CSV file!', 'success');
         }
 
-        function exportToCSV() {
-            exportToExcel(); // Same functionality
-        }
-
-        function printReport() {
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Student Marks Report</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; }
-                        table { border-collapse: collapse; width: 100%; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #f2f2f2; }
-                    </style>
-                </head>
-                <body>
-                    <h1>Student Marks Report</h1>
-                    <p>Generated on: ${new Date().toLocaleDateString()}</p>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>ID</th>
-                                <th>Subject</th>
-                                <th>Marks</th>
-                                <th>Grade</th>
-                                <th>Percentage</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${students.map(student => `
-                                <tr>
-                                    <td>${student.name}</td>
-                                    <td>${student.id}</td>
-                                    <td>${student.subject}</td>
-                                    <td>${student.marks}</td>
-                                    <td>${student.grade}</td>
-                                    <td>${student.percentage}%</td>
-                                    <td>${new Date(student.date).toLocaleDateString()}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                students = [];
+                saveStudents();
+                loadStudents();
+                updateStats();
+                showAlert('All data cleared successfully!', 'success');
+            }
         }
     </script>
 </body>
