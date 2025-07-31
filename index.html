@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Student Marks Manager</title>
+    <title>Student Marks Manager - Final Version</title>
     <style>
         * {
             margin: 0;
@@ -62,6 +62,12 @@
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
         }
 
@@ -137,6 +143,10 @@
 
         .btn-danger {
             background: #dc3545;
+        }
+
+        .btn-info {
+            background: #17a2b8;
         }
 
         .btn-small {
@@ -291,6 +301,15 @@
             font-size: 1.1em;
         }
 
+        .exam-details {
+            background: #e3f2fd;
+            padding: 8px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-size: 12px;
+            color: #1976d2;
+        }
+
         .subject-marks {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -303,6 +322,23 @@
             padding: 8px;
             border-radius: 5px;
             font-size: 14px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .header {
+                background: #667eea;
+            }
+            .btn, .modal {
+                display: none !important;
+            }
         }
 
         @media (max-width: 768px) {
@@ -320,7 +356,7 @@
                 margin: 5px 0;
             }
 
-            .form-row {
+            .form-row, .form-row-3 {
                 grid-template-columns: 1fr;
             }
 
@@ -334,14 +370,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Enhanced Student Marks Manager</h1>
-            <p>Manage multiple subjects per student with Google Sheets sync</p>
+            <h1>📊 Student Marks Manager - Final Version</h1>
+            <p>Manage multiple subjects per student with exam details and comprehensive results</p>
         </div>
 
         <div class="main-content">
             <!-- Form Section -->
             <div class="form-section">
-                <h2>➕ Add New Student with Multiple Subjects</h2>
+                <h2>➕ Add New Student with Exam Details</h2>
                 <form id="studentForm">
                     <div class="form-row">
                         <div class="form-group">
@@ -351,6 +387,31 @@
                         <div class="form-group">
                             <label for="studentId">Student ID:</label>
                             <input type="text" id="studentId" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label for="examName">Exam Name:</label>
+                            <input type="text" id="examName" placeholder="e.g., Mid-Term, Final, Unit Test" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="examDate">Exam Date:</label>
+                            <input type="date" id="examDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="examType">Exam Type:</label>
+                            <select id="examType" required>
+                                <option value="">Select Exam Type</option>
+                                <option value="Mid-Term">Mid-Term</option>
+                                <option value="Final">Final</option>
+                                <option value="Unit Test">Unit Test</option>
+                                <option value="Quiz">Quiz</option>
+                                <option value="Assignment">Assignment</option>
+                                <option value="Project">Project</option>
+                                <option value="Practical">Practical</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
                     </div>
 
@@ -377,6 +438,7 @@
                 <button class="btn btn-warning" onclick="syncToGoogleSheets()">📤 Sync to Google Sheets</button>
                 <button class="btn" onclick="openGoogleSheets()">📈 Open Google Sheet</button>
                 <button class="btn btn-secondary" onclick="exportToCSV()">📄 Export to CSV</button>
+                <button class="btn btn-info" onclick="printAllResults()">🖨️ Print All Results</button>
                 <button class="btn" onclick="clearAllData()">🗑️ Clear All Data</button>
             </div>
 
@@ -423,6 +485,30 @@
                         <input type="text" id="editId" required>
                     </div>
                 </div>
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label for="editExamName">Exam Name:</label>
+                        <input type="text" id="editExamName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editExamDate">Exam Date:</label>
+                        <input type="date" id="editExamDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editExamType">Exam Type:</label>
+                        <select id="editExamType" required>
+                            <option value="">Select Exam Type</option>
+                            <option value="Mid-Term">Mid-Term</option>
+                            <option value="Final">Final</option>
+                            <option value="Unit Test">Unit Test</option>
+                            <option value="Quiz">Quiz</option>
+                            <option value="Assignment">Assignment</option>
+                            <option value="Project">Project</option>
+                            <option value="Practical">Practical</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
                 <div id="editSubjectsContainer">
                     <!-- Edit subjects will be added here -->
                 </div>
@@ -438,7 +524,7 @@
         let currentEditIndex = -1;
         
         // Google Apps Script URL
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbw-yXhjxN_voAtnZpE6z-IZUdON1-k2EcjBectpcjeG9vvmROA7enoRtLovzQqAq9hMDw/exec';
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycby3C7NmtoWv9SUQpRksfhWh_qj2EVE-Ni6W15MyVxMKE4MZFHZs1FhSErYr96ynQ5j2vA/exec';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -505,6 +591,9 @@
         function addStudent() {
             const name = document.getElementById('studentName').value;
             const id = document.getElementById('studentId').value;
+            const examName = document.getElementById('examName').value;
+            const examDate = document.getElementById('examDate').value;
+            const examType = document.getElementById('examType').value;
             
             // Collect all subjects
             const subjectRows = document.querySelectorAll('.subject-row');
@@ -532,6 +621,9 @@
             const student = {
                 name: name,
                 id: id,
+                examName: examName,
+                examDate: examDate,
+                examType: examType,
                 subjects: subjects,
                 date: new Date().toISOString()
             };
@@ -574,10 +666,14 @@
                     <div class="student-header">
                         <div>
                             <div class="student-name">${student.name} (${student.id})</div>
+                            <div class="exam-details">
+                                <strong>${student.examName}</strong> - ${student.examType} | Date: ${new Date(student.examDate).toLocaleDateString()}
+                            </div>
                             <small>Average: ${averageMarks}% | Subjects: ${student.subjects.length}</small>
                         </div>
                         <div>
                             <button class="btn btn-secondary btn-small" onclick="editStudent(${index})">Edit</button>
+                            <button class="btn btn-info btn-small" onclick="printStudentResult(${index})">Print Result</button>
                             <button class="btn btn-danger btn-small" onclick="deleteStudent(${index})">Delete</button>
                         </div>
                     </div>
@@ -600,6 +696,9 @@
             
             document.getElementById('editName').value = student.name;
             document.getElementById('editId').value = student.id;
+            document.getElementById('editExamName').value = student.examName;
+            document.getElementById('editExamDate').value = student.examDate;
+            document.getElementById('editExamType').value = student.examType;
             
             const editContainer = document.getElementById('editSubjectsContainer');
             editContainer.innerHTML = '';
@@ -641,6 +740,9 @@
 
             const name = document.getElementById('editName').value;
             const id = document.getElementById('editId').value;
+            const examName = document.getElementById('editExamName').value;
+            const examDate = document.getElementById('editExamDate').value;
+            const examType = document.getElementById('editExamType').value;
             
             // Collect all subjects from edit form
             const subjectRows = document.querySelectorAll('#editSubjectsContainer .subject-row');
@@ -669,6 +771,9 @@
                 ...students[currentEditIndex],
                 name: name,
                 id: id,
+                examName: examName,
+                examDate: examDate,
+                examType: examType,
                 subjects: subjects
             };
 
@@ -739,6 +844,262 @@
             }, 3000);
         }
 
+        // Print individual student result
+        function printStudentResult(index) {
+            const student = students[index];
+            const totalMarks = student.subjects.reduce((sum, subject) => sum + subject.marks, 0);
+            const averageMarks = Math.round(totalMarks / student.subjects.length);
+            const totalSubjects = student.subjects.length;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Student Result - ${student.name}</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 20px;
+                            background: white;
+                        }
+                        .header {
+                            text-align: center;
+                            border-bottom: 2px solid #333;
+                            padding-bottom: 20px;
+                            margin-bottom: 30px;
+                        }
+                        .student-info {
+                            background: #f5f5f5;
+                            padding: 15px;
+                            border-radius: 8px;
+                            margin-bottom: 20px;
+                        }
+                        .exam-info {
+                            background: #e3f2fd;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin: 10px 0;
+                            color: #1976d2;
+                        }
+                        table { 
+                            border-collapse: collapse; 
+                            width: 100%; 
+                            margin: 20px 0;
+                        }
+                        th, td { 
+                            border: 1px solid #ddd; 
+                            padding: 12px; 
+                            text-align: left; 
+                        }
+                        th { 
+                            background-color: #667eea; 
+                            color: white;
+                        }
+                        .summary {
+                            background: #f8f9fa;
+                            padding: 15px;
+                            border-radius: 8px;
+                            margin-top: 20px;
+                        }
+                        .grade-A { color: #28a745; font-weight: bold; }
+                        .grade-B { color: #17a2b8; font-weight: bold; }
+                        .grade-C { color: #ffc107; font-weight: bold; }
+                        .grade-D { color: #fd7e14; font-weight: bold; }
+                        .grade-F { color: #dc3545; font-weight: bold; }
+                        @media print {
+                            body { margin: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 Student Result Report</h1>
+                        <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                    </div>
+                    
+                    <div class="student-info">
+                        <h2>👤 Student Information</h2>
+                        <p><strong>Name:</strong> ${student.name}</p>
+                        <p><strong>Student ID:</strong> ${student.id}</p>
+                        <p><strong>Date Added:</strong> ${new Date(student.date).toLocaleDateString()}</p>
+                    </div>
+                    
+                    <div class="exam-info">
+                        <h3>📝 Exam Details</h3>
+                        <p><strong>Exam Name:</strong> ${student.examName}</p>
+                        <p><strong>Exam Type:</strong> ${student.examType}</p>
+                        <p><strong>Exam Date:</strong> ${new Date(student.examDate).toLocaleDateString()}</p>
+                    </div>
+                    
+                    <h3>📚 Subject Results</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Marks</th>
+                                <th>Grade</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${student.subjects.map(subject => `
+                                <tr>
+                                    <td>${subject.name}</td>
+                                    <td>${subject.marks}</td>
+                                    <td class="grade-${subject.grade.charAt(0)}">${subject.grade}</td>
+                                    <td>${subject.percentage}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div class="summary">
+                        <h3>📊 Performance Summary</h3>
+                        <p><strong>Total Subjects:</strong> ${totalSubjects}</p>
+                        <p><strong>Average Marks:</strong> ${averageMarks}%</p>
+                        <p><strong>Highest Marks:</strong> ${Math.max(...student.subjects.map(s => s.marks))}%</p>
+                        <p><strong>Lowest Marks:</strong> ${Math.min(...student.subjects.map(s => s.marks))}%</p>
+                        <p><strong>Pass Rate:</strong> ${Math.round((student.subjects.filter(s => s.marks >= 50).length / totalSubjects) * 100)}%</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Print all students results
+        function printAllResults() {
+            if (students.length === 0) {
+                showAlert('No data to print', 'error');
+                return;
+            }
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>All Students Results</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 20px;
+                            background: white;
+                        }
+                        .header {
+                            text-align: center;
+                            border-bottom: 2px solid #333;
+                            padding-bottom: 20px;
+                            margin-bottom: 30px;
+                        }
+                        .student-section {
+                            border: 1px solid #ddd;
+                            margin: 20px 0;
+                            padding: 15px;
+                            border-radius: 8px;
+                            page-break-inside: avoid;
+                        }
+                        .student-header {
+                            background: #f8f9fa;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin-bottom: 15px;
+                        }
+                        .exam-details {
+                            background: #e3f2fd;
+                            padding: 8px;
+                            border-radius: 5px;
+                            margin: 5px 0;
+                            font-size: 12px;
+                            color: #1976d2;
+                        }
+                        table { 
+                            border-collapse: collapse; 
+                            width: 100%; 
+                            margin: 10px 0;
+                        }
+                        th, td { 
+                            border: 1px solid #ddd; 
+                            padding: 8px; 
+                            text-align: left; 
+                            font-size: 12px;
+                        }
+                        th { 
+                            background-color: #667eea; 
+                            color: white;
+                        }
+                        .summary {
+                            background: #f8f9fa;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin-top: 10px;
+                            font-size: 12px;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .student-section { page-break-inside: avoid; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 All Students Results Report</h1>
+                        <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                        <p>Total Students: ${students.length}</p>
+                    </div>
+                    
+                    ${students.map((student, index) => {
+                        const totalMarks = student.subjects.reduce((sum, subject) => sum + subject.marks, 0);
+                        const averageMarks = Math.round(totalMarks / student.subjects.length);
+                        const totalSubjects = student.subjects.length;
+                        
+                        return `
+                            <div class="student-section">
+                                <div class="student-header">
+                                    <h3>👤 ${student.name} (${student.id})</h3>
+                                    <div class="exam-details">
+                                        <strong>${student.examName}</strong> - ${student.examType} | Date: ${new Date(student.examDate).toLocaleDateString()}
+                                    </div>
+                                    <p>Average: ${averageMarks}% | Subjects: ${totalSubjects}</p>
+                                </div>
+                                
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Marks</th>
+                                            <th>Grade</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${student.subjects.map(subject => `
+                                            <tr>
+                                                <td>${subject.name}</td>
+                                                <td>${subject.marks}</td>
+                                                <td>${subject.grade}</td>
+                                                <td>${subject.percentage}%</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                                
+                                <div class="summary">
+                                    <strong>Summary:</strong> Average: ${averageMarks}% | 
+                                    Highest: ${Math.max(...student.subjects.map(s => s.marks))}% | 
+                                    Lowest: ${Math.min(...student.subjects.map(s => s.marks))}% | 
+                                    Pass Rate: ${Math.round((student.subjects.filter(s => s.marks >= 50).length / totalSubjects) * 100)}%
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
         // CORS-FREE FORM SUBMISSION METHOD
         function syncToGoogleSheets() {
             if (!webAppUrl) {
@@ -753,6 +1114,9 @@
                     flatData.push({
                         name: student.name,
                         id: student.id,
+                        examName: student.examName,
+                        examType: student.examType,
+                        examDate: student.examDate,
                         subject: subject.name,
                         marks: subject.marks,
                         grade: subject.grade,
@@ -840,10 +1204,10 @@
                 return;
             }
 
-            let csv = 'Student Name,Student ID,Subject,Marks,Grade,Percentage,Date\n';
+            let csv = 'Student Name,Student ID,Exam Name,Exam Type,Exam Date,Subject,Marks,Grade,Percentage,Date\n';
             students.forEach(student => {
                 student.subjects.forEach(subject => {
-                    csv += `${student.name},${student.id},${subject.name},${subject.marks},${subject.grade},${subject.percentage}%,${new Date(student.date).toLocaleDateString()}\n`;
+                    csv += `${student.name},${student.id},${student.examName},${student.examType},${new Date(student.examDate).toLocaleDateString()},${subject.name},${subject.marks},${subject.grade},${subject.percentage}%,${new Date(student.date).toLocaleDateString()}\n`;
                 });
             });
 
